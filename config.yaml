@@ -1,0 +1,122 @@
+# Directory structure
+BASE_DIR: "/Users/filipsjostrand/Documents/DevOps/GitHub/SSRS/Filip"
+TEMP_DATA_DIR: "pipeline/data"
+APP_DATA_DIR: "dashboard/data"
+GRAPHICS_DIR: "dashboard/graphics"
+
+
+# Data processing parameters
+CHUNK_SIZE: 1000000
+SEQUENCE_LENGTH: "10s"
+
+# Column configurations
+COLUMN_NAMES:
+  - time
+  - node_id
+  - node_name
+  - signal_name_alias
+  - value
+  - signal_instance
+
+COLUMN_TYPES:
+  node_id: object
+  node_name: object
+  signal_name_alias: object
+  value: float64
+  signal_instance: object
+
+
+# InfluxDB configuration
+INFLUXDB_HOST: "eu-central-1-1.aws.cloud2.influxdata.com"
+INFLUXDB_ORG: "maritime"
+INFLUXDB_DATABASE: "ship2shore-prod"
+
+# Logging configuration
+LOG_FORMAT: "%(message)s"
+PIPELINE_LOG_FORMAT: "%(elapsed_time)s -- %(message)s"
+MODEL_LOG_FORMAT: "%(elapsed_time)s - %(levelname)s - %(message)s"
+TRAIN_LOG_FORMAT: "%(elapsed_time)s - %(levelname)s - %(message)s"
+INFER_LOG_FORMAT: "%(elapsed_time)s - %(levelname)s - %(message)s"
+LOG_FILE: "pipeline.log"
+
+TO_QUERY:
+  - "RPM"
+  - "FUELRATE"
+  - "ENGINE_LOAD"
+  - "ENGTEMP"
+  - "ENGOILPRES"
+  - "ENG_HOURS"
+  - "LAT"
+  - "LON"
+  - "SOG"
+  - "COG"
+
+BOATS:
+  - "12-10, Drottning Silvia"
+  - "12-02, Amalia Wallenberg"
+  - "12-11, Lovisa Åstrand"
+  - "12-04, Lars Prytz"
+
+PLOTTING_FEATURES:
+  - "RPM"
+  - "FUELRATE"
+  - "ENGINE_LOAD"
+  - "ENGTEMP"
+  - "ENGOILPRES"
+  - "SOG"
+
+AVOID_IN_COMPARISON_PLOTS:
+  - "SOG"
+
+EVENT_MEASUREMENTS:
+  - "E_CHECKENG"
+  - "E_HIGHBOOS"
+  - "E_LOWCOOLA"
+  - "E_LOWFUELP"
+  - "E_LOWOILLE"
+  - "E_LOWOILPR"
+  - "E_LOWSYSTE"
+  - "E_OVERTEMP"
+
+# Used for most sorting and grouping activities
+INDEX:
+  - "node_name"
+  - "signal_instance"
+  - "date"
+  - "time"
+
+# The ones we train and infer on
+MODEL_FEATURES:
+  - "ENGINE_LOAD"
+  - "ENGOILPRES"
+  - "ENGTEMP"
+  - "ENG_HOURS"
+  - "FUELRATE"
+  - "RPM"
+  - "SOG"
+  - "wind_velocity"
+  - "alignment_factor"
+  - "signal_instance"
+
+# For preprocessing
+CATEGORICAL_FEATURES:
+  - "signal_instance"
+
+# What scale to use for the anomaly heatmap
+HEAT_MAP_SCALE: [0, 1]
+
+# Tuning parameters
+PARAM_GRID:
+  timesteps: [10, 20]
+  learning_rate: [0.0001]
+  epochs: [10]
+  batch_size: [32, 64]
+
+TUNING_DATA_LENGTH: 5000 # How many observations to use when tuning
+TUNING_DATA_CONSISTENCY: 100 # How many consecutive values when tuning
+
+TUNED_PARAMETERS:
+  timesteps: 10
+  learning_rate: 0.0001
+  epochs: 10
+  batch_size: 32

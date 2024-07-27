@@ -1,0 +1,68 @@
+import pandas as pd
+import plotly.express as px
+import streamlit as st
+
+import os
+import base64
+from pathlib import Path
+
+from utils.config_manager import ConfigManager
+
+
+class HelperFunctions:
+    config = ConfigManager()
+
+    @classmethod
+    def img_to_bytes(cls, img_path: str) -> str:
+        img_bytes = Path(img_path).read_bytes()
+        encoded = base64.b64encode(img_bytes).decode()
+        return encoded
+
+    @staticmethod
+    def _get_data(dir: str) -> pd.DataFrame:
+        return pd.read_csv(dir)
+
+    @staticmethod
+    def _get_full_path(cls) -> str:
+        base_dir = cls.config.get("BASE_DIR")
+        app_data_dir = cls.config.get("APP_DATA_DIR")
+        full_path = os.path.join(base_dir, app_data_dir)
+        return full_path
+
+    @classmethod
+    def get_all_data(cls) -> pd.DataFrame:
+        full_path = cls._get_full_path(cls)
+
+        data = cls._get_data(f"{full_path}/data.csv")
+        errors = cls._get_data(f"{full_path}/errors.csv")
+        return data, errors
+
+    @classmethod
+    def get_boats(cls) -> list:
+        boats = cls.config.get("BOATS")
+        return boats
+
+    @classmethod
+    def get_shown_features(cls) -> list:
+        features = cls.config.get("PLOTTING_FEATURES")
+        return features
+
+    @classmethod
+    def get_colors(cls) -> dict:
+        features = cls.get_shown_features()
+        colors = {
+            feature: px.colors.qualitative.Plotly[i % len(px.colors.qualitative.Plotly)]
+            for i, feature in enumerate(features)
+        }
+        return colors
+    
+    @classmethod
+    def write_heading(cls, text: str) -> None:
+        st.markdown(
+                f"""
+            <div style='text-align: center; font-size: 2em;'>
+                {text}
+            </div> 
+            """,
+                unsafe_allow_html=True,
+            )

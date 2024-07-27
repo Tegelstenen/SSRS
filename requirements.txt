@@ -1,0 +1,9 @@
+pandas
+numpy
+tensorflow
+scikit-learn
+openmeteo_requests
+retry_requests
+influxdb3-python
+python-dotenv
+ruamel.yaml
