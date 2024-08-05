@@ -1,6 +1,9 @@
 # TODO:
 # - Decide more on cleaning
-# - Extend with more features
+# - Extend with more features (?)
+# - use more moudlarisation and utils for everything
+# - implement testing
+
 
 import argparse
 import logging
@@ -19,6 +22,7 @@ from modules.process_raw import RawDataProcessor
 from modules.sequence import DataSequencer
 from modules.weather import WeatherProcessor
 from modules.widen import DataWidener
+from modules.final_cleanup import DataCleaner
 
 
 # Load config.get(uration
@@ -42,6 +46,7 @@ def run_steps(start: str, stop: str, only_query=False) -> None:
         DataImputer()
         DataMerger()
         WeatherProcessor()
+        DataCleaner()
 
 def move_data(save_path: str) -> None:
     logging.info(f"Moving data to {save_path}")
