@@ -71,6 +71,29 @@ class RawDataProcessor:
                 return (None, some_df)
         return (None, None)
 
+    @staticmethod
+    def process_file_wrapper(column_names, col_types, csv_file):
+        try:
+            df = pd.read_csv(
+                csv_file,
+                names=column_names,
+                dtype={**col_types, 'time': str},  
+                skiprows=1,
+            )
+            
+            df['time'] = pd.to_datetime(df['time'], format='ISO8601')
+            
+            if df["signal_instance"].isna().all():
+                return (df, None)
+            else:
+                df["signal_instance"] = df["signal_instance"].apply(
+                    lambda x: "P" if x == "0" else ("SB" if x == "1" else x)
+                )
+                return (None, df)
+        except Exception as exc:
+            logging.error(f'{csv_file} generated an exception: {exc}')
+            return (None, None)
+
     def _process_directory(self) -> Tuple[List[pd.DataFrame], List[pd.DataFrame]]:
         csv_files = self._find_csv_files()
         total_files = len(csv_files)
@@ -81,7 +104,7 @@ class RawDataProcessor:
         error_count = 0
 
         with ProcessPoolExecutor() as executor:
-            future_to_file = {executor.submit(self._process_file, csv_file): csv_file for csv_file in csv_files}
+            future_to_file = {executor.submit(self.process_file_wrapper, self.column_names, self.col_types, csv_file): csv_file for csv_file in csv_files}
             for i, future in enumerate(as_completed(future_to_file), 1):
                 csv_file = future_to_file[future]
                 try:
