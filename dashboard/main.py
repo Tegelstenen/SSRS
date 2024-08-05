@@ -1,11 +1,11 @@
-# TODO:
-# - create database
-# - Make heatmap relative to its own value
+# TODO: 
+# - create database ?
+# - Make heatmap relative to its own value ?
 #   - using a baseline value can ensure that
-# - if trips overlaps two days make that still visable
+# - if trips overlaps two days make that still visable (I THINK THIS IS TRUE IN How TRIP ID is calculated but not how it is displayed)
 # - Fix Engine_load always being anomaly
-#   - Some have missing days, why?
 # - Ensure daily updates
+# - 
 
 import streamlit as st
 
@@ -20,10 +20,10 @@ from modules.sidebar import SideBar
 DATA, ERRORS = HelperFunctions.get_all_data()
 BOAT_NAMES = HelperFunctions.get_boats()  
 FEATURES = HelperFunctions.get_shown_features()
-FEATURE_COLORS = HelperFunctions.get_colors()
+FEATURE_COLORS = HelperFunctions.get_colors() 
 
 ########################## 
-# Initial page config
+# Initial page config 
 ##########################  
 st.set_page_config(
     page_title="SSRS Anomaly Detection", 
