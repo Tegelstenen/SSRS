@@ -4,6 +4,7 @@ RUN apt-get update && apt-get install -y python3-pip && apt-get install -y pytho
 RUN python3 -m venv /env
 RUN source /env/bin/activate
 
+
 COPY requirements.txt /requirements.txt
 RUN pip install -r /requirements.txt
 
@@ -12,3 +13,4 @@ COPY ./models /models
 EXPOSE 8888
 
 ENTRYPOINT source ./init-ssh.sh filip 123
+
