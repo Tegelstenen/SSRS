@@ -1,6 +1,3 @@
-# TODO:
-# - Make indentation start with message section
-
 import logging
 import time
 from utils.config_manager import ConfigManager

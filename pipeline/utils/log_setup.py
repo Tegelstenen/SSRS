@@ -1,7 +1,3 @@
-# TODO:
-# - Make indentation start with message section
-# - Create subcalss for iterative messages
-
 import logging
 import time
 from utils.config_manager import ConfigManager

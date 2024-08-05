@@ -1,7 +1,3 @@
-# TODO:
-# - will certain groupings improve the model given that min max normalizations will be
-#   dependent on, for instance, rainy windy days etc
-
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
