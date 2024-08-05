@@ -1,58 +1,61 @@
 import pandas as pd
 import numpy as np
-from tensorflow.keras.preprocessing.sequence import pad_sequences
+import keras 
+from sklearn.preprocessing import RobustScaler, StandardScaler
+
+import logging
+
 from modules.lstm.model import LSTMAutoencoder
-import os
-import pickle
 from utils.config_manager import ConfigManager
 
 class LSTMInferencer:
     def __init__(self):
-        self.data_path = "models/data"
+        self.data_path = "models/data/data.csv"
         self.model_path = "models/model_info"
-        self.output_path = "dashboard/data"
+        self.output_path = "dashboard/data/errors.csv"
         self.config = ConfigManager()
         self.model_features = self.config.get("MODEL_FEATURES")
-        self.event_measurements = self.config.get("EVENT_MEASUREMENTS")
         self.alignment_features = ['alignment_factor']
         self.angle_features = ['COG', 'wind_angle']
-        self.numeric_features = [f for f in self.model_features if f not in self.event_measurements and f not in self.alignment_features and f not in self.angle_features]
+        self.numeric_features = [f for f in self.model_features if f not in self.alignment_features and f not in self.angle_features and f not in ['signal_instance']]
         if 'wind_velocity' not in self.numeric_features:
             self.numeric_features.append('wind_velocity')
+    
 
     def load_data(self, path):
+        logging.infer("Loading data")
         df = pd.read_csv(path)
         df = df.dropna(subset=['RPM'])
+        df = self.handle_missing_data(df)
 
-        # Extract only the date part from the time column
-        df['date'] = pd.to_datetime(df['time']).dt.date
-
-        # Normalize numeric features using RobustScaler
-        with open(os.path.join(self.model_path, 'robust_scaler.pkl'), 'rb') as f:
-            robust_scaler = pickle.load(f)
-        df[self.numeric_features] = robust_scaler.transform(df[self.numeric_features])
-
-        # Normalize alignment features using StandardScaler
-        with open(os.path.join(self.model_path, 'alignment_scaler.pkl'), 'rb') as f:
-            alignment_scaler = pickle.load(f)
-        df[self.alignment_features] = alignment_scaler.transform(df[self.alignment_features])
-
-        # Normalize angle features using sine and cosine transformation
+        logging.infer("Scaling data")
+        robust_scaler = RobustScaler()
+        df[self.numeric_features] = robust_scaler.fit_transform(df[self.numeric_features])
+        
+        alignment_scaler = StandardScaler()
+        df[self.alignment_features] = alignment_scaler.fit_transform(df[self.alignment_features])
+        
+        logging.infer("Creating angle features")
         for feature in self.angle_features:
             if feature in df.columns:
                 df[feature + '_sin'] = np.sin(np.radians(df[feature]))
                 df[feature + '_cos'] = np.cos(np.radians(df[feature]))
                 df.drop(columns=[feature], inplace=True)
 
-        # Scale signal_instance
+        logging.infer("Making signal instance binary")
         df['signal_instance'] = df['signal_instance'].apply(lambda x: 1 if x == 'SB' else 0 if x == 'P' else x)
+        
+        logging.infer("Creating features")
+        features = self.numeric_features + [f"{feat}_sin" for feat in self.angle_features] + [f"{feat}_cos" for feat in self.angle_features] + self.alignment_features + ['signal_instance']
 
-        # Other features
-        features = self.numeric_features + [f"{feat}_sin" for feat in self.angle_features] + [f"{feat}_cos" for feat in self.angle_features] + self.alignment_features + ['signal_instance'] + self.event_measurements
-
-        return df, features
+        return df, features, robust_scaler, alignment_scaler
+    
+    def handle_missing_data(self, df):
+        df = df.dropna()
+        return df
 
     def to_sequence(self, data, features, trip_id_col='TRIP_ID'):
+        logging.infer("Creating sequences")        
         sequences = []
         trip_ids = data[trip_id_col].unique()
         node_names = []
@@ -65,10 +68,12 @@ class LSTMInferencer:
         return sequences, trip_ids, node_names, dates
 
     def calculate_reconstruction_errors(self, original_sequences, reconstructed_sequences):
+        logging.infer("Calculating reconstruction errors")        
         errors = np.square(original_sequences - reconstructed_sequences)
         return errors
 
     def aggregate_errors(self, errors, trip_ids, features, node_names, dates):
+        logging.infer("Aggregating errors")        
         aggregated_data = []
         for i, trip_id in enumerate(trip_ids):
             trip_errors = errors[i]
@@ -86,9 +91,9 @@ class LSTMInferencer:
         return pd.DataFrame(aggregated_data)
 
     def run(self):
-        data, features = self.load_data(self.data_path)
+        data, features, _, _ = self.load_data(self.data_path)
         sequences, trip_ids, node_names, dates = self.to_sequence(data, features)
-        sequences_padded = pad_sequences(sequences, padding='post', dtype='float32')
+        sequences_padded = keras.preprocessing.sequence.pad_sequences(sequences, padding='post', dtype='float32')
 
         autoencoder = LSTMAutoencoder(input_shape=sequences_padded.shape[2])
         autoencoder.load(self.model_path)
