@@ -9,6 +9,7 @@ from sklearn.model_selection import train_test_split
 
 from modules.autoencoder.autoencoder import Autoencoder
 from utils.config_manager import ConfigManager
+from utils.helper import load_data, instantiate_model
 
 
 class Trainer:
@@ -24,23 +25,10 @@ class Trainer:
         scaled_data = scaler.fit_transform(data)
         return scaled_data
 
-    def load_data(self, path):
-        dataframe = pd.read_csv(path)
-        dataframe.dropna(inplace=True)
-        model_features = self.config.get("MODEL_FEATURES")
-        raw_data = dataframe[model_features].values
-        scaled_data = self.scale_data(raw_data)
-        x_train, x_test = train_test_split(scaled_data, test_size=0.3, random_state=42)
-        return x_train, x_test
-
-    def train(self, x_train, x_test):
-        autoencoder = Autoencoder(
-            input_shape=x_train.shape[1:], hidden_layers=[128, 64], latent_space_dim=2
-        )
-        autoencoder.summary()
-        autoencoder.compile(self.learning_rate)
-        autoencoder.train(x_train, x_test, self.batch_size, self.epochs)
-        return autoencoder
+    def train(self, data):
+        model = instantiate_model(data)
+        model.fit(data)
+        return model
 
     @staticmethod
     def absolute_error(true, reconstructed):
@@ -64,6 +52,6 @@ class Trainer:
 
     def run(self):
         data_path = "models/data/data.csv"
-        x_train, x_test = self.load_data(data_path)
-        autoencoder = self.train(x_train, x_test)
-        autoencoder.save("models/model_info")
+        data = load_data(data_path)
+        model = self.train(data)
+        model.save("models/model_info")

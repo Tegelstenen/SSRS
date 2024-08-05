@@ -1,6 +1,6 @@
 from keras import Model
 from keras.layers import Input, Dense, Reshape
-from keras.optimizers.legacy import Adam
+from keras.optimizers import Adam
 from keras.losses import MeanAbsoluteError
 import numpy as np
 import os
@@ -32,12 +32,12 @@ class Autoencoder:
         mse_loss = MeanAbsoluteError()
         self.model.compile(optimizer=optimizer, loss=mse_loss)
 
-    def train(self, x_train, x_test, batch_size, num_epochs):
-        self.model.fit(x_train,
-                       x_train,
-                       batch_size=batch_size,
-                       epochs=num_epochs,
-                       validation_data=(x_test, x_test),
+    def fit(self, data):
+        self.compile()
+        self.model.fit(data,
+                       data,
+                       batch_size=32,
+                       epochs=10,
                        shuffle=True)
 
     def save(self, save_folder="."):
@@ -59,7 +59,7 @@ class Autoencoder:
         with open(parameters_path, "rb") as f:
             parameters = pickle.load(f)
         autoencoder = Autoencoder(*parameters)
-        weights_path = os.path.join(save_folder, "weights.h5")
+        weights_path = os.path.join(save_folder, ".weights.h5")
         autoencoder.load_weights(weights_path)
         return autoencoder
 
@@ -78,7 +78,7 @@ class Autoencoder:
             pickle.dump(parameters, f)
 
     def _save_weights(self, save_folder):
-        save_path = os.path.join(save_folder, "weights.h5")
+        save_path = os.path.join(save_folder, ".weights.h5")
         self.model.save_weights(save_path)
 
     def _build(self):

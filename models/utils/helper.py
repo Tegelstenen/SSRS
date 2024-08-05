@@ -5,6 +5,7 @@ from sklearn.preprocessing import LabelEncoder
 
 from utils.config_manager import ConfigManager
 from modules.lstm.model import LSTMAutoencoder
+from modules.autoencoder.autoencoder import Autoencoder
 
 config = ConfigManager()
 model_features = config.get("MODEL_FEATURES")
@@ -14,10 +15,8 @@ index = config.get("INDEX")
 # ----------------------------------#
 #        model instansiator         #
 # ----------------------------------#
-def instantiate_model(data: np.ndarray) -> LSTMAutoencoder:
-    full_length_of_dataset = data.shape[0]
-    features = data.shape[1]
-    model = LSTMAutoencoder(full_length_of_dataset, features)
+def instantiate_model(data: np.ndarray) -> Autoencoder:
+    model = Autoencoder((data.shape[1],), [128, 64], 2)
     return model
 
 
