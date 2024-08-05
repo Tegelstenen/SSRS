@@ -18,7 +18,7 @@ from modules.sidebar import SideBar
 # Data and Constants 
 ##########################
 DATA, ERRORS = HelperFunctions.get_all_data()
-BOAT_NAMES = HelperFunctions.get_boats()  
+BOAT_NAMES = HelperFunctions.get_boats()   
 FEATURES = HelperFunctions.get_shown_features()
 FEATURE_COLORS = HelperFunctions.get_colors() 
 
