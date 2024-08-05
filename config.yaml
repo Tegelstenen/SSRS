@@ -1,5 +1,5 @@
 # Directory structure
-BASE_DIR: "/Users/filipsjostrand/Documents/DevOps/GitHub/SSRS/Filip"
+BASE_DIR: "/Users/filipsjostrand/DevOps/GitHub/SSRS"
 TEMP_DATA_DIR: "pipeline/data"
 APP_DATA_DIR: "dashboard/data"
 GRAPHICS_DIR: "dashboard/graphics"

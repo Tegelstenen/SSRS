@@ -12,16 +12,16 @@ from utils.helper import HelperFunctions
 from modules.anomaly import AnomalyPlots, AnomalySelectors
 from modules.sidebar import SideBar
 
-
+ 
 ##########################
 # Data and Constants 
 ##########################
 DATA, ERRORS = HelperFunctions.get_all_data()
-BOAT_NAMES = HelperFunctions.get_boats() 
+BOAT_NAMES = HelperFunctions.get_boats()  
 FEATURES = HelperFunctions.get_shown_features()
 FEATURE_COLORS = HelperFunctions.get_colors()
 
-##########################
+########################## 
 # Initial page config
 ########################## 
 st.set_page_config(

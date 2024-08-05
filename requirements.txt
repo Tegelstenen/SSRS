@@ -7,3 +7,5 @@ retry_requests
 influxdb3-python
 python-dotenv
 ruamel.yaml
+streamlit
+plotly
