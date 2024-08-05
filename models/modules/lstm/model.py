@@ -1,8 +1,4 @@
-# TODO:
-# - remove all tunings dicst and make it tunable instead
-
-from numpy import array, ndarray, full, ceil, mean, vstack, zeros
-from tensorflow import keras
+import numpy as np
 from keras.models import Sequential
 from keras.layers import LSTM
 from keras.layers import Dense
