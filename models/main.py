@@ -6,7 +6,6 @@ from modules.autoencoder.train import Trainer as AutoencoderTrainer
 from modules.lstm.inference import LSTMInferencer
 from modules.lstm.train import Trainer as LSTMTrainer
 from utils.log_setup import setup_logging
-from tests.test_model import TestLSTMAutoencoder
 
 setup_logging()
 
@@ -15,9 +14,7 @@ def get_args() -> argparse.Namespace:
     
     # Create mutually exclusive group
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("--test", action="store_true", help="Run tests")
     group.add_argument("--mode", choices=["train", "infer"], help="Mode: train or infer")
-    
     parser.add_argument("--model", choices=["autoencoder", "lstm"], help="Model: autoencoder or lstm")
     
     return parser.parse_args()
@@ -50,15 +47,9 @@ def run(mode: str, model: str) -> None:
 
 def main() -> None:
     args = get_args()
-    if args.test:
-        loader = unittest.TestLoader()
-        suite = loader.discover('test')
-        runner = unittest.TextTestRunner(verbosity=2)
-        runner.run(suite)
-    else:
-        if not args.model:
-            raise ValueError("Model must be specified when mode is train or infer")
-        run(args.mode, args.model)
+    if not args.model:
+        raise ValueError("Model must be specified when mode is train or infer")
+    run(args.mode, args.model)
 
 if __name__ == "__main__":
     main()

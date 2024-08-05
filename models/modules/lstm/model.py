@@ -39,7 +39,7 @@ class LSTMAutoencoder(BaseEstimator, RegressorMixin):
         self.model = self._create_model(self.timesteps, self.learning_rate)
 
     # ********* METHODS *********
-    def fit(self, data: ndarray) -> Sequential:
+    def fit(self, data: np.ndarray) -> Sequential:
         self.model = self._create_model(self.timesteps, self.learning_rate)
         batched_data = self._batch_data(data)
         train_data, test_data = train_test_split(
@@ -55,7 +55,7 @@ class LSTMAutoencoder(BaseEstimator, RegressorMixin):
         logging.model("Model fitted")
         return self.model
 
-    def predict(self, data: ndarray) -> array:
+    def predict(self, data: np.ndarray) -> np.array:
         self.model = self._create_model(self.timesteps, self.learning_rate)
         data = self._batch_data(data)
         reconstruction = self.model.predict(data, verbose=0)
@@ -90,13 +90,13 @@ class LSTMAutoencoder(BaseEstimator, RegressorMixin):
         except Exception as e:
             raise Exception(f"Error loading model weights: {e}")
 
-    def tune_model(self, data: ndarray) -> Sequential:
+    def tune_model(self, data: np.ndarray) -> Sequential:
         best_params, _ = self._grid_search(data)
         for param, value in best_params.items():
             setattr(self, param, value)
 
     # ********* HELPERS *********
-    def _batch_data(self, data: ndarray) -> ndarray:
+    def _batch_data(self, data: np.ndarray) -> np.ndarray:
         if self.timesteps is None:
             raise ValueError("timesteps must be set before batching data")
         
@@ -106,13 +106,13 @@ class LSTMAutoencoder(BaseEstimator, RegressorMixin):
         batches = data[:num_complete_batches * self.timesteps].reshape(-1, self.timesteps, num_features)
         remaining_samples = num_samples % self.timesteps
         if remaining_samples > 0:
-            last_batch = zeros((self.timesteps, num_features))
+            last_batch = np.zeros((self.timesteps, num_features))
             last_batch[:remaining_samples] = data[-remaining_samples:]
-            batches = vstack((batches, last_batch.reshape(1, self.timesteps, num_features)))
+            batches = np.vstack((batches, last_batch.reshape(1, self.timesteps, num_features)))
         
         return batches
 
-    def _re_shape(self, data: ndarray) -> ndarray:
+    def _re_shape(self, data: np.ndarray) -> np.ndarray:
         flattened_data = data.reshape(-1, self.features)
         original_data = flattened_data[: self.full_length_of_dataset, :]
         logging.model("Re-shaping data done")
@@ -154,7 +154,7 @@ class LSTMAutoencoder(BaseEstimator, RegressorMixin):
         model.compile(optimizer=optimizer, loss="mse")
         return model
 
-    def _grid_search(self, data: ndarray):
+    def _grid_search(self, data: np.ndarray):
         grid = self._get_param_grid()
         best_params = self._get_params_dict()
         best_score = float("inf")
@@ -188,7 +188,7 @@ class LSTMAutoencoder(BaseEstimator, RegressorMixin):
         logging.model(f"\t {best_score}")
         return best_params, best_score
 
-    def _evaluate_params(self, params: dict, data: ndarray) -> float:
+    def _evaluate_params(self, params: dict, data: np.ndarray) -> float:
         self.timesteps = params["timesteps"]
         batch_data = self._batch_data(data)
         param_id = f"{params['timesteps']}_{params['learning_rate']}_{params['epochs']}_{params['batch_size']}"
@@ -198,7 +198,7 @@ class LSTMAutoencoder(BaseEstimator, RegressorMixin):
             logging.model(f"param_id: {param_id}, Kfold iteration: {iteration}")
             score = self._get_score(batch_data, params, train_index, test_index)
             scores.append(score)
-        mean_score = mean(scores)
+        mean_score = np.mean(scores)
         return mean_score
 
     # ********* GETTERS *********
@@ -208,7 +208,7 @@ class LSTMAutoencoder(BaseEstimator, RegressorMixin):
         return start, stop
 
     def _get_num_batches(self) -> int:
-        num_batches = int(ceil(self.full_length_of_dataset / self.timesteps))
+        num_batches = int(np.ceil(self.full_length_of_dataset / self.timesteps))
         return num_batches
 
     def _get_timesteps(self) -> int:
@@ -223,13 +223,13 @@ class LSTMAutoencoder(BaseEstimator, RegressorMixin):
         params_dict = {key: None for key in grid.keys()}
         return params_dict
 
-    def _get_kfold_splits(self, data: ndarray):
+    def _get_kfold_splits(self, data: np.ndarray):
         kf = KFold(n_splits=5)
         splits = kf.split(data)
         return splits
 
     def _get_score(
-        self, data: ndarray, params: dict, train_index: int, test_index: int
+        self, data: np.ndarray, params: dict, train_index: int, test_index: int
     ) -> float:
         train_data, test_data = data[train_index], data[test_index]
         model = self._create_model(params["timesteps"], params["learning_rate"])
