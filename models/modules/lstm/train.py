@@ -16,8 +16,6 @@ class Trainer:
         self.model_path = "/models/tunings"
         self.config = ConfigManager()
         self.learning_rate = 0.0005
-        self.batch_size = 32
-        self.epochs = 10
         self.model_features = self.config.get("MODEL_FEATURES")
         
         self.alignment_features = ['alignment_factor']
@@ -114,10 +112,9 @@ class Trainer:
 
         logging.train("Initializing the autoencoder...")
         autoencoder = LSTMAutoencoder(input_shape=train_sequences_padded.shape[2])
-        autoencoder.summary()
         
         logging.train("Training the autoencoder...")
-        history = autoencoder.train(train_sequences_padded, test_sequences_padded, epochs=self.epochs, batch_size=self.batch_size)
+        history = autoencoder.train(train_sequences_padded, test_sequences_padded)
 
         logging.train(f"Saving the trained model to {self.model_path}...")
         autoencoder.save(self.model_path)
