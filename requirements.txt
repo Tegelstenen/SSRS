@@ -10,3 +10,4 @@ ruamel.yaml
 streamlit
 plotly
 pytest
+keras-tuner

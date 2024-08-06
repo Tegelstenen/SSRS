@@ -22,7 +22,7 @@ class Inferencer:
         return reconstructed_raw
 
     def _get_indeces(self):
-        df = pd.read_csv("models/data/data.csv")
+        df = pd.read_csv("/models/data/data.csv")
         
         df.drop(columns=self.FEATURES, inplace=True)
         return df
@@ -41,7 +41,7 @@ class Inferencer:
         return mean_errors_per_group
 
     def run(self):
-        data_path = "models/data/data.csv"
+        data_path = "/models/data/data.csv"
         data, indeces = load_data(data_path, for_inference=True)
         autoencoder = Autoencoder.load("models/model_info")
 

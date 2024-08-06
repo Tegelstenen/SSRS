@@ -64,7 +64,7 @@ class LSTMAutoencoder:
         self.model = self._build_model()
         self.model.load_weights(os.path.join(filepath, "weights.h5"))
 
-    def train(self, x_train, x_val, epochs=500, batch_size=32):
+    def train(self, x_train, x_val, epochs=10, batch_size=32):
         history = self.model.fit(
             x_train,
             x_train,
