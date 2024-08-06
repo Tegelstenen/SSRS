@@ -12,7 +12,7 @@ from utils.config_manager import ConfigManager
 
 class Trainer:
     def __init__(self):
-        self.data_path = "models/data/data.csv"
+        self.data_path = "/models/data/data.csv"
         self.model_path = "/models/tunings"
         self.config = ConfigManager()
         self.learning_rate = 0.0005

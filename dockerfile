@@ -16,7 +16,9 @@ RUN python3 -m venv /env
 RUN /bin/bash -c "source /env/bin/activate"
 
 # Copy the requirements file and install dependencies
-COPY models models
+COPY models/modules models/modules
+COPY models/utils models/utils
+COPY models/main.py models/main.py
 COPY requirements.txt requirements.txt
 COPY config.yaml config.yaml
 RUN pip install -r requirements.txt

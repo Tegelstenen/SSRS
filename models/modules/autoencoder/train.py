@@ -47,7 +47,7 @@ class Trainer:
         return mean_errors_df
 
     def run(self):
-        data_path = "models/data/data.csv"
+        data_path = "/models/data/data.csv"
         data = load_data(data_path)
         model = self.train(data)
         model.save("/models/tunings")

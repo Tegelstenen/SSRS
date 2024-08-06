@@ -10,9 +10,9 @@ from utils.config_manager import ConfigManager
 
 class LSTMInferencer:
     def __init__(self):
-        self.data_path = "models/data/data.csv"
+        self.data_path = "/models/data/data.csv"
         self.model_path = "/models/tunings"
-        self.output_path = "dashboard/data/errors.csv"
+        self.output_path = "/dashboard/data/errors.csv"
         self.config = ConfigManager()
         self.model_features = self.config.get("MODEL_FEATURES")
         self.alignment_features = ['alignment_factor']
@@ -93,7 +93,7 @@ class LSTMInferencer:
     def run(self):
         data, features, _, _ = self.load_data(self.data_path)
         sequences, trip_ids, node_names, dates = self.to_sequence(data, features)
-        sequences_padded = keras.preprocessing.sequence.pad_sequences(sequences, padding='post', dtype='float32')
+        sequences_padded = keras.utils.pad_sequences(sequences, padding='post', dtype='float32')
 
         autoencoder = LSTMAutoencoder(input_shape=sequences_padded.shape[2])
         autoencoder.load(self.model_path)
