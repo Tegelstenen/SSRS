@@ -1,3 +1,6 @@
+
+# TODO: remove defaults
+
 import tensorflow as tf
 import keras
 
@@ -11,33 +14,29 @@ from utils.log_setup import setup_logging
 
 setup_logging()
 
-# tf.config.run_functions_eagerly(True)
-
-
 class LSTMAutoencoder:
     def __init__(self, input_shape):
         self.input_shape = input_shape
         self.model = None
         self.best_hps = None
-        self.tuner = kt.RandomSearch(
+        self.tuner = kt.BayesianOptimization(
                     self._build_model,
                     objective='val_mean_absolute_error',
-                    max_trials=1, #TODO: change this to smth reasonbale
-                    executions_per_trial=1
+                    max_trials=10
                     )
         
 
     def _build_model(self, hp):
         model = keras.models.Sequential()
         model.add(keras.layers.Input(shape=(None, self.input_shape)))
-        model.add(keras.layers.Masking(mask_value=0.0)) # TODO: look over if this masking/padding value causes problems?
+        model.add(keras.layers.Masking(mask_value=0.0))
 
         for i in range(hp.Int('num_layers', 2, 20)):
             model.add(keras.layers.Dense(units=hp.Int('units_' + str(i),
                                                 min_value=32,
                                                 max_value=512,
                                                 step=32),
-                                activation='relu'))
+                                activation='tanh'))
             model.add(keras.layers.Dropout(hp.Float("dropout_" + str(i), 0.1, 0.5, step=0.1)))
         
         # last LSTM layer
@@ -113,7 +112,7 @@ class LSTMAutoencoder:
             x_train,
             x_train,
             validation_data=(x_val, x_val),
-            epochs=1, #TODO: change this to 50
+            epochs=10, #TODO: change this to 50
             shuffle=False,
             callbacks=[stop_early],
         )
@@ -128,7 +127,7 @@ class LSTMAutoencoder:
             x_train,
             x_train,
             validation_data=(x_val, x_val),
-            epochs=1, #TODO: change this to 500
+            epochs=50, #TODO: change this to 500
             shuffle=False,
         )
         logging.model("Getting best epoch")
