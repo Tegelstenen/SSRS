@@ -50,4 +50,4 @@ class Trainer:
         data_path = "models/data/data.csv"
         data = load_data(data_path)
         model = self.train(data)
-        model.save("models/model_info")
+        model.save("/models/tunings")

@@ -11,7 +11,7 @@ from utils.config_manager import ConfigManager
 class LSTMInferencer:
     def __init__(self):
         self.data_path = "models/data/data.csv"
-        self.model_path = "models/model_info"
+        self.model_path = "/models/tunings"
         self.output_path = "dashboard/data/errors.csv"
         self.config = ConfigManager()
         self.model_features = self.config.get("MODEL_FEATURES")
