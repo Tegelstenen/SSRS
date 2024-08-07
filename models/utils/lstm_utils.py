@@ -1,13 +1,3 @@
-
-# TODO: Make sure this imoplementation works on aiqu
-# TODO: Clean up inside inferer (given that it works inside aiqu)
-# TODO: check that this implementation is alright for inference, if not change sequence length to be much smaller and pad to be within a day or so
-# TODO: Check if adding differnet layers, like lstm as seen in https://machinelearningmastery.com/lstm-autoencoders/
-# TODO: test the entire final df that is used for training such that it is conforming to what i was imagining
-# TODO: fix the testings
-# TODO: Add testings to like everything if time permits
-# TODO: SPLIT DATA BY DATE TO INFER ON LATEST 2 MONTHS
-
 import pandas as pd
 import numpy as np
 from scipy import stats
@@ -93,13 +83,16 @@ def _to_sequence(data: pd.DataFrame, indices: pd.DataFrame, group_cols=['node_na
         
 def _get_padded_splits(train_data, train_indeces, test_data, test_indeces):
     train_sequences = _to_sequence(train_data, train_indeces)
-    train_sequences_padded = keras.utils.pad_sequences(train_sequences, padding='post', dtype='float32', value=-1)
-    if test_data is not None and test_indeces is not None:
-        test_sequences = _to_sequence(test_data, test_indeces)
-        test_sequences_padded = keras.utils.pad_sequences(test_sequences, padding='post', dtype='float32', value=-1)
-    else:
-        test_sequences = None
-        test_sequences_padded = None
+    test_sequences = _to_sequence(test_data, test_indeces) if test_data is not None else []
+    
+    max_seq_length = max(
+        max(len(seq) for seq in train_sequences) if train_sequences else 0,
+        max(len(seq) for seq in test_sequences) if test_sequences else 0
+    )
+    
+    train_sequences_padded = keras.utils.pad_sequences(train_sequences, maxlen=max_seq_length, padding='post', dtype='float32', value=-1)
+    test_sequences_padded = keras.utils.pad_sequences(test_sequences, maxlen=max_seq_length, padding='post', dtype='float32', value=-1) if test_sequences else None
+    
     return train_sequences_padded,test_sequences_padded
 
 def _test_train_split_data(df, for_inference=False):

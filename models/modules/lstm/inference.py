@@ -17,7 +17,8 @@ class LSTMInferencer:
     def run(self):
         df, _ = load_data(self.data_path, for_inference=True) # TODO: load the scaler
         sequences_padded, _ = get_padded_sequence(df, for_inference=True)
-        autoencoder = LSTMAutoencoder(input_shape=sequences_padded.shape[2])
+        input_shape = (sequences_padded.shape[1], sequences_padded.shape[2])
+        autoencoder = LSTMAutoencoder(input_shape=input_shape)
         autoencoder.load(self.model_path)
         reconstructions = self._get_reconstructions(sequences_padded, autoencoder)
         sequences_padded, reconstructions = self._reshape(sequences_padded, reconstructions)
