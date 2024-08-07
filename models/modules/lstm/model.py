@@ -19,7 +19,7 @@ class LSTMAutoencoder:
         self.input_shape = input_shape
         self.model = None
         self.best_hps = None
-        self.tuner = kt.RandomSearch(
+        self.tuner = kt.RandomSearch( # TODO: refactor to methods
                     self._build_model,
                     objective='val_mean_absolute_error',
                     max_trials=10
@@ -29,7 +29,7 @@ class LSTMAutoencoder:
     def _build_model(self, hp):
         model = keras.models.Sequential()
         model.add(keras.layers.Input(shape=(None, self.input_shape)))
-        model.add(keras.layers.Masking(mask_value=0.0))
+        model.add(keras.layers.Masking(mask_value=-1))
 
         for i in range(hp.Int('num_layers', 2, 20)):
             model.add(keras.layers.Dense(units=hp.Int('units_' + str(i),
@@ -62,7 +62,7 @@ class LSTMAutoencoder:
             optimizer=keras.optimizers.Adam(
                 hp.Choice('learning_rate', [1e-2, 1e-3, 1e-4])),
             loss='mean_absolute_error',
-            metrics=['mean_absolute_error'])
+            metrics=['mean_absolute_error', 'mean_squared_error', 'mean_absolute_percentage_error'])
         
         return model
 
