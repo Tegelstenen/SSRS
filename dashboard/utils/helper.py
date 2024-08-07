@@ -44,7 +44,7 @@ class HelperFunctions:
 
     @classmethod
     def get_shown_features(cls) -> list:
-        features = cls.config.get("PLOTTING_FEATURES")
+        features = cls.config.get("ENGINE_FEATURES")
         return features
 
     @classmethod

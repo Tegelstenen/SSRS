@@ -57,14 +57,6 @@ BOATS:
   - "12-11, Lovisa Åstrand"
   - "12-04, Lars Prytz"
 
-PLOTTING_FEATURES:
-  - "RPM"
-  - "FUELRATE"
-  - "ENGINE_LOAD"
-  - "ENGTEMP"
-  - "ENGOILPRES"
-  - "SOG"
-
 AVOID_IN_COMPARISON_PLOTS:
   - "SOG"
 
@@ -101,6 +93,18 @@ MODEL_FEATURES:
 # For preprocessing
 CATEGORICAL_FEATURES:
   - "signal_instance"
+
+ENGINE_FEATURES:
+  - "RPM"
+  - "FUELRATE"
+  - "ENGINE_LOAD"
+  - "ENGTEMP"
+  - "ENGOILPRES"
+  - "SOG"
+
+GEO_FEATURES:
+  - "wind_velocity"
+  - "alignment_factor"
 
 # What scale to use for the anomaly heatmap
 HEAT_MAP_SCALE: [0, 1]

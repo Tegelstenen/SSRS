@@ -19,11 +19,11 @@ class LSTMAutoencoder:
         self.input_shape = input_shape
         self.model = None
         self.best_hps = None
-        self.tuner = kt.BayesianOptimization(
+        self.tuner = kt.RandomSearch(
                     self._build_model,
                     objective='val_mean_absolute_error',
                     max_trials=10
-                    )
+                    ) # TODO: change this tuner into hyperband for final training
         
 
     def _build_model(self, hp):

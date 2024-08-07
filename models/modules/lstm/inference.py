@@ -54,17 +54,23 @@ class LSTMInferencer:
         df = df.dropna()
         return df
 
-    def to_sequence(self, data, features, trip_id_col='TRIP_ID'):
-        logging.infer("Creating sequences")        
+
+    def to_sequence(self, data, features, trip_id_col='TRIP_ID', node_name_col='node_name'):
+        logging.infer("Creating sequences")
         sequences = []
-        trip_ids = data[trip_id_col].unique()
+        trip_ids = []
         node_names = []
         dates = []
-        for trip_id in trip_ids:
-            trip_data = data[data[trip_id_col] == trip_id][features].values
+        
+        grouped = data.groupby([node_name_col, trip_id_col])
+        
+        for (node_name, trip_id), group in grouped:
+            trip_data = group[features].values
             sequences.append(trip_data)
-            node_names.append(data[data[trip_id_col] == trip_id]['node_name'].iloc[0])
-            dates.append(data[data[trip_id_col] == trip_id]['date'].iloc[0])
+            trip_ids.append(trip_id)
+            node_names.append(node_name)
+            dates.append(group['date'].iloc[0])
+        
         return sequences, trip_ids, node_names, dates
 
     def calculate_reconstruction_errors(self, original_sequences, reconstructed_sequences):
