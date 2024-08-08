@@ -3,8 +3,10 @@ import numpy as np
 from scipy import stats
 from sklearn.preprocessing import MinMaxScaler
 import keras
+import tensorflow as tf
 
-from modules.lstm.model import LSTMAutoencoder
+import pickle
+
 from utils.config_manager import ConfigManager
 
 config = ConfigManager()
@@ -18,24 +20,31 @@ if "signal_instance" in indices:
     indices.remove("signal_instance")
 numeric_features = scaling_features + ["signal_instance"]
 
-def run():
-    df, scaler = load_data(data_path, for_inference=True) # TODO: load the scaler
-    sequences_padded, _ = get_padded_sequence(df, for_inference=True)
-    autoencoder = LSTMAutoencoder(input_shape=sequences_padded.shape[2])
-    autoencoder.load(model_path)
+def create_dataset(sequences, batch_size):
+    dataset = tf.data.Dataset.from_tensor_slices((sequences, sequences))  # Create (input, target) tuples
+    dataset = dataset.shuffle(buffer_size=len(sequences))  # Shuffle the sequences
+    dataset = dataset.batch(batch_size)
+    dataset = dataset.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
+    return dataset
 
 def get_padded_sequence(df, for_inference=False):
     train_data, train_indeces, test_data, test_indeces = _test_train_split_data(df, for_inference=for_inference) 
     train_sequences_padded, test_sequences_padded = _get_padded_splits(train_data, train_indeces, test_data, test_indeces)
     return train_sequences_padded, test_sequences_padded
     
-def _scale_data(df: pd.DataFrame) -> pd.DataFrame:
-    scaler = MinMaxScaler()
+def _scale_data(df: pd.DataFrame, predefined_scaler: MinMaxScaler) -> pd.DataFrame:
     df = _remove_outliers(df, scaling_features)
     df = _remove_outliers(df, scaling_features)
     df_numerical = _get_numerical_values(df, scaling_features)
-    scaler.fit(df_numerical)
-    df_numerical = scaler.transform(df_numerical)
+    
+    if predefined_scaler is None:
+        scaler = MinMaxScaler() 
+        scaler.fit(df_numerical)
+        df_numerical = scaler.transform(df_numerical)
+    else:
+        scaler = predefined_scaler
+        df_numerical = scaler.transform(df_numerical)
+    
     df.loc[:, scaling_features] = pd.DataFrame(df_numerical, columns=scaling_features, index=df.index)
     return df, scaler
 
@@ -53,14 +62,17 @@ def _remove_outliers(df: pd.DataFrame, features: list):
 def load_data(path, for_inference=False):
     df = pd.read_csv(path)
     df.dropna(inplace=True)
-    df, scaler = _scale_data(df)
+    
+    if for_inference:
+        with open('/models/tunings/scaler.pkl', 'rb') as f:
+            scaler = pickle.load(f)
+        df, scaler = _scale_data(df, scaler)
+    else:
+        df, scaler = _scale_data(df, None)
+    
     df = _encode_signal_instance(df)
     df = df[model_features + indices]
-    if for_inference:
-        scaler = None # TODOL replace with loading the scaler and scaling using that instead
-        return df, None
-    else:
-        return df, scaler
+    return df, scaler
 
 def _split_data_frame(df):
     df_numeric = df[numeric_features]
@@ -77,7 +89,9 @@ def _to_sequence(data: pd.DataFrame, indices: pd.DataFrame, group_cols=['node_na
     grouped = indices.groupby(group_cols)
     for _, group in grouped:
         trip_data = data.loc[group.index, :].values
-        sequences.append(trip_data)
+        for i in range(0, len(trip_data), 30):
+            sequence = trip_data[i:i+30]
+            sequences.append(sequence)
     return sequences
 
         
@@ -100,7 +114,7 @@ def _test_train_split_data(df, for_inference=False):
     
     # Try different quantiles to ensure non-empty splits
     if not for_inference:
-        for quantile in [0.8, 0.7, 0.6, 0.5]:
+        for quantile in np.linspace(0.9, 0.5, 1000):
             split_date = df['date'].quantile(quantile)
             train_data = df[df['date'] <= split_date]
             test_data = df[df['date'] > split_date]

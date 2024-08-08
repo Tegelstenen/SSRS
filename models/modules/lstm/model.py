@@ -1,8 +1,5 @@
 # TODO: remove defaults
-
-import tensorflow as tf
 import keras
-
 import keras_tuner as kt
 
 import os
@@ -84,20 +81,15 @@ class LSTMAutoencoder:
 
         self.model.load_weights(os.path.join(filepath, "weights.h5"))
 
-    def train(self, x_train, x_val):
-        # Ensure data is of type float32
-        x_train = x_train.astype('float32')
-        x_val = x_val.astype('float32')
-
+    def train(self, train_dataset, val_dataset):
         logging.model("Defining callback")
         stop_early = keras.callbacks.EarlyStopping(monitor="val_loss", patience=5)
 
         logging.model("Searching for best hyperparameters")
         self.tuner.search(
-            x_train,
-            x_train,
-            validation_data=(x_val, x_val),
-            epochs=50,
+            train_dataset,
+            validation_data=val_dataset,
+            epochs=5,  # TODO: change once for full training
             shuffle=False,
             callbacks=[stop_early],
         )
@@ -109,10 +101,9 @@ class LSTMAutoencoder:
 
         logging.model("Training hypermodel")
         history = model.fit(
-            x_train,
-            x_train,
-            validation_data=(x_val, x_val),
-            epochs=500,
+            train_dataset,
+            validation_data=val_dataset,
+            epochs=5,  # TODO: change once for full training to like 500 or smth
             shuffle=False,
         )
         logging.model("Getting best epoch")
@@ -122,9 +113,8 @@ class LSTMAutoencoder:
         logging.model("Training model with best epoch")
         self.model = self.tuner.hypermodel.build(self.best_hps)
         history = self.model.fit(
-            x_train,
-            x_train,
-            validation_data=(x_val, x_val),
+            train_dataset,
+            validation_data=val_dataset,
             epochs=best_epoch,
             shuffle=False,
         )

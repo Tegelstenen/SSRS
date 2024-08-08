@@ -11,11 +11,10 @@ class LSTMInferencer:
         self.data_path = "/models/data/data.csv"
         self.model_path = "/models/tunings"
         self.output_path = "/dashboard/data/errors.csv"
-    
-    
 
     def run(self):
         df, _ = load_data(self.data_path, for_inference=True) # TODO: load the scaler
+        df = df.query("node_name != '12-10, Drottning Silvia'")
         sequences_padded, _ = get_padded_sequence(df, for_inference=True)
         input_shape = (sequences_padded.shape[1], sequences_padded.shape[2])
         autoencoder = LSTMAutoencoder(input_shape=input_shape)

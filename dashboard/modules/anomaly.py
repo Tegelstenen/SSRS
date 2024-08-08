@@ -182,7 +182,7 @@ class AnomalyPlots:
             y=heatmap_data.index,
             aspect="auto",
             color_continuous_scale=color_scale,
-            range_color=color_range,
+            # range_color=color_range,
         )
 
         #  Update layout to enable drag mode and disable zoom
