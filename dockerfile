@@ -33,3 +33,5 @@ RUN chmod +x ./init-ssh.sh
 RUN rm -rf docker-examples nvidia-examples NVIDIA_Deep_Learning_Container_License.pdf README.md
 
 EXPOSE 22
+
+CMD ["tail", "-f", "/dev/null"]
