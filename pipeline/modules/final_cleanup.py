@@ -13,15 +13,16 @@ config = ConfigManager()
 
 class DataCleaner:
     def __init__(self):
-        self.directory = HelperFunctions.get_data_folder()
-        self.run(self.directory)
-
-    def run(self, directory: Path) -> None:
-        df = self._load_Data(directory)    
+        self.data_path = os.path.join(HelperFunctions.get_data_folder(), "data.csv")
+        self.run()
+        
+    def run(self) -> None:
+        logging.info("Final cleaning")
+        df = pd.read_csv(self.data_path)
         timespans = self._get_timespans(df)
         filtered = self._filter_data(df, timespans)
         droped_engine_load_nas = self._remove_dates_before_engine_load(filtered)
-        self._save_data(droped_engine_load_nas, directory)
+        self._save_data(droped_engine_load_nas)
 
     def _remove_dates_before_engine_load(self, filtered):
         droped_engine_load_nas = filtered.dropna(subset=['ENGINE_LOAD'])
@@ -42,14 +43,9 @@ class DataCleaner:
         return timespans
         
         
-    def _save_data(self, df: pd.DataFrame, file_path: Path) -> None:
-        df.to_csv(file_path, index=False)
-        logging.pipeline(f"Saved processed data to {file_path}")
-
-    def _load_Data(self, directory: str) -> pd.DataFrame:
-        data_path = os.path.join(directory, "data.csv")
-        df = pd.read_csv(data_path)
-        return df
+    def _save_data(self, df: pd.DataFrame) -> None:
+        df.to_csv(self.data_path, index=False)
+        logging.pipeline(f"Saved processed data to {self.data_path}")
         
         
 

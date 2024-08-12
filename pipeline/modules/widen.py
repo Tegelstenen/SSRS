@@ -67,7 +67,7 @@ class DataWidener:
 
     def pivot_wider(self, df: pd.DataFrame) -> pd.DataFrame:
         geo_columns = ['SOG', 'COG', 'LON', 'LAT']
-        is_geo_data = all(col in df['signal_name_alias'].unique() for col in geo_columns)
+        is_geo_data = any(col in df['signal_name_alias'].unique() for col in geo_columns)
         
         if is_geo_data:
             df = df.drop_duplicates(subset=['node_name', 'signal_instance', 'date', 'time', 'signal_name_alias'])
