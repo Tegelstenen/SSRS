@@ -4,7 +4,7 @@ import pandas as pd
 from datetime import datetime
 import os
 
-from modules.update_data import _get_querying_dates, _call_pipeline_script, _load_new_data
+from modules.update_data import _get_querying_dates, _call_pipeline_script, _load_new_data, _create_new_data
 
 @pytest.fixture(scope="module")
 def data():
@@ -23,17 +23,16 @@ def test_get_querying_dates(data):
 def test_call_pipeline_script(data):
     querying_dates = _get_querying_dates(data)
     _call_pipeline_script(querying_dates[0], querying_dates[1], "dashboard/modules")
-    assert os.path.isfile("../data.csv")
-    os.remove("../data.csv")
+    assert os.path.isfile("dashboard/modules/data.csv")
+    os.remove("dashboard/modules/data.csv")
     
 def test_load_new_data(data):
     new_data = _load_new_data(data)
-    check_file = os.path.isfile("../data.csv")
+    check_file = os.path.isfile("dashboard/modules/data.csv")
     assert not check_file, "The csv file should be deleted after loaded"
     assert isinstance(new_data, pd.DataFrame), "The data should be loaded into a pandas data frame"
     
-    existing_df = pd.read_csv("./data/data.csv", nrows=1)
+    existing_df = pd.read_csv("dashboard/data/data.csv", nrows=1)
     existing_columns = set(existing_df.columns)
     new_columns = set(new_data.columns)
     assert existing_columns == new_columns, "The features in both dataframes should be the same."
-    

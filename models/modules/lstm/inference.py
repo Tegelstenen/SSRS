@@ -8,9 +8,10 @@ config = ConfigManager()
 
 class LSTMInferencer:
     def __init__(self):
-        self.data_path = "/models/data/data.csv"
-        self.model_path = "/models/tunings"
-        self.output_path = "/dashboard/data/errors.csv"
+        self.data_path = "models/data/data.csv"
+        self.model_path = "models/tunings"
+        self.output_path_daily = "dashboard/data/errors.csv"
+        self.output_path_full = "dashboard/data/full_errors.csv"
 
     def run(self):
         df, _ = load_data(self.data_path, for_inference=True) # TODO: load the scaler

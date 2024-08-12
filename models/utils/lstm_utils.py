@@ -64,7 +64,7 @@ def load_data(path, for_inference=False):
     df.dropna(inplace=True)
     
     if for_inference:
-        with open('/models/tunings/scaler.pkl', 'rb') as f:
+        with open('models/tunings/scaler.pkl', 'rb') as f:
             scaler = pickle.load(f)
         df, scaler = _scale_data(df, scaler)
     else:
@@ -110,6 +110,7 @@ def _get_padded_splits(train_data, train_indeces, test_data, test_indeces):
     return train_sequences_padded,test_sequences_padded
 
 def _test_train_split_data(df, for_inference=False):
+    df['date'] = df['date'].apply(lambda x: x + " 00:00:00" if len(x) == 10 else x)
     df['date'] = pd.to_datetime(df['date'])
     
     # Try different quantiles to ensure non-empty splits
