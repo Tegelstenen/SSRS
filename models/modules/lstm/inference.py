@@ -21,9 +21,16 @@ class LSTMInferencer:
         reconstructions = self._get_reconstructions(sequences_padded, autoencoder)
         sequences_padded, reconstructions = self._reshape(sequences_padded, reconstructions)
         reconstructions, original = self._remove_paddings(reconstructions, sequences_padded)
+        
+        # pointwise loss
         residuals = self._get_residuals(original, reconstructions)
+        df[numeric_features] = residuals
+        df.to_csv(self.output_path_full)
+        
+        # daily mse
         df = self._get_daily_mse(df, residuals)
-        df.to_csv(self.output_path)
+        df.to_csv(self.output_path_daily)
+
 
     def _get_daily_mse(self, df, residuals):
         df[numeric_features] = residuals

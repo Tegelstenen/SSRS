@@ -1,8 +1,4 @@
 import pytest
-import numpy as np
-import pandas as pd
-from sklearn.preprocessing import MinMaxScaler
-import keras
 
 from pprint import pprint
 

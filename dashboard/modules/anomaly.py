@@ -130,11 +130,13 @@ class AnomalyPlots:
             hovermode="x unified", 
             xaxis=dict(
                 title="Time",
+                color="white",  # Set x-axis text color to white
             ),
             dragmode="zoom",
             plot_bgcolor='rgba(225, 228, 233, 0.8)',
-            paper_bgcolor='rgba(155, 158, 166, 0.8)',
+            paper_bgcolor='rgba(0, 0, 0, 0)',  # Transparent background
             template="none",
+            font=dict(color="white"),  # Set all text color to white
             **yaxis_layouts,
         )
 
@@ -182,10 +184,9 @@ class AnomalyPlots:
             y=heatmap_data.index,
             aspect="auto",
             color_continuous_scale=color_scale,
-            # range_color=color_range,
+            range_color=color_range,
         )
 
-        #  Update layout to enable drag mode and disable zoom
         fig.update_layout(
             dragmode="pan",  # Enable drag mode
             xaxis=dict(fixedrange=True, type="category", showticklabels=False),
@@ -266,7 +267,8 @@ class AnomalyPlots:
             ),
             dragmode="zoom",  # Enable zoom mode
             plot_bgcolor='rgba(225, 228, 233, 0.8)',
-            paper_bgcolor='rgba(155, 158, 166, 0.8)',
+            paper_bgcolor='rgba(0, 0, 0, 0)',  # Transparent background
+            font=dict(color="white"),
             template="none",
         )
 

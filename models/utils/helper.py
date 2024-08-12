@@ -4,7 +4,6 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import LabelEncoder
 
 from utils.config_manager import ConfigManager
-from modules.lstm.model import LSTMAutoencoder
 from modules.autoencoder.autoencoder import Autoencoder
 
 config = ConfigManager()

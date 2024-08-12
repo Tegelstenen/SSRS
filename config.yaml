@@ -100,7 +100,6 @@ ENGINE_FEATURES:
   - "ENGINE_LOAD"
   - "ENGTEMP"
   - "ENGOILPRES"
-  - "SOG"
 
 GEO_FEATURES:
   - "wind_velocity"
