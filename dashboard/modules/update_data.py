@@ -1,13 +1,11 @@
-
-# TODO: Add loggings
 import pandas as pd
 
 import pathlib
 from typing import Tuple
 from datetime import datetime
 import subprocess
-
 import logging
+import os
 
 def update_data():
     """
@@ -41,6 +39,7 @@ def update_data():
     # Reset the index after removing duplicates
     updated_data = updated_data.reset_index(drop=True)
     logging.info("Saving updated data...")
+    updated_data['date'] = pd.to_datetime(updated_data['date'], format='mixed').dt.strftime('%Y-%m-%d') # Dont know why this is needed but 00:00:00 is appended to some rows
     updated_data.to_csv("dashboard/data/data.csv", index=False)
     updated_data.to_csv("dashboard/modules/data.csv", index=False)
     updated_data.to_csv("models/data/data.csv", index=False) # for inference
@@ -98,8 +97,10 @@ def _load_new_data(data: pd.DataFrame) -> pd.DataFrame:
         at 'modules/data.csv', which is then read and deleted.
     """
     _create_new_data(data)
-    new_data = pd.read_csv("dashboard/modules/data.csv")
-    # TODO: Implement file removal logic
+    if os.path.exists("dashboard/modules/data.csv"):
+        new_data = pd.read_csv("dashboard/modules/data.csv")
+    else:
+        new_data = pd.DataFrame()
     try:
         pathlib.Path("dashboard/modules/data.csv").unlink()
         logging.info("Temporary data file removed successfully.")
@@ -126,7 +127,7 @@ def _get_querying_dates(data: pd.DataFrame) -> Tuple[str, str]:
             - last_date_in_df: The most recent date in the DataFrame (format: 'YYYY-MM-DD').
             - todays_date: Today's date (format: 'YYYY-MM-DD').
     """
-    data["date"] = pd.to_datetime(data["date"], format='mixed')
+    data["date"] = pd.to_datetime(data["date"])
     last_date_in_df = data["date"].max().strftime('%Y-%m-%d')
     todays_date = datetime.now().date().strftime('%Y-%m-%d')
     return last_date_in_df, todays_date
