@@ -19,14 +19,10 @@ class DataCleaner:
     def run(self) -> None:
         logging.info("Final cleaning")
         df = pd.read_csv(self.data_path)
+        df["date"] = pd.to_datetime(df["date"], format='%Y-%m-%d')
         timespans = self._get_timespans(df)
         filtered = self._filter_data(df, timespans)
-        droped_engine_load_nas = self._remove_dates_before_engine_load(filtered)
-        self._save_data(droped_engine_load_nas)
-
-    def _remove_dates_before_engine_load(self, filtered):
-        droped_engine_load_nas = filtered.dropna(subset=['ENGINE_LOAD'])
-        return droped_engine_load_nas
+        self._save_data(filtered)
 
     def _filter_data(self, df: pd.DataFrame, timespans: pd.DataFrame) -> pd.DataFrame:
         filtered = df.merge(timespans[['node_name', 'TRIP_ID']], on=["node_name", "TRIP_ID"])

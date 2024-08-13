@@ -106,7 +106,7 @@ GEO_FEATURES:
   - "alignment_factor"
 
 # What scale to use for the anomaly heatmap
-HEAT_MAP_SCALE: [0, 1]
+HEAT_MAP_SCALE: [0, 0.5]
 
 # Tuning parameters
 PARAM_GRID:

@@ -14,7 +14,7 @@ class LSTMInferencer:
         self.output_path_full = "dashboard/data/full_errors.csv"
 
     def run(self):
-        df, _ = load_data(self.data_path, for_inference=True) # TODO: load the scaler
+        df, scaler = load_data(self.data_path, for_inference=True)  # Load the scaler
         sequences_padded, _ = get_padded_sequence(df, for_inference=True)
         input_shape = (sequences_padded.shape[1], sequences_padded.shape[2])
         autoencoder = LSTMAutoencoder(input_shape=input_shape)
