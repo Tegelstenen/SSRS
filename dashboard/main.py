@@ -25,7 +25,7 @@ FEATURE_COLORS = HelperFunctions.get_colors()
 ########################## 
 # Initial page config 
 ##########################   
-st.set_page_config(
+st.set_page_config( 
     page_title="SSRS Anomaly Detection", 
     page_icon="⚓️",
     layout="wide", 
