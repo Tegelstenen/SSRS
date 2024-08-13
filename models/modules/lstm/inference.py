@@ -8,13 +8,13 @@ config = ConfigManager()
 
 class LSTMInferencer:
     def __init__(self):
-        self.data_path = "/models/data/data.csv"
-        self.model_path = "/models/tunings"
-        self.output_path = "/dashboard/data/errors.csv"
+        self.data_path = "models/data/data.csv"
+        self.model_path = "models/tunings"
+        self.output_path_daily = "dashboard/data/errors.csv"
+        self.output_path_full = "dashboard/data/full_errors.csv"
 
     def run(self):
-        df, _ = load_data(self.data_path, for_inference=True) # TODO: load the scaler
-        df = df.query("node_name != '12-10, Drottning Silvia'")
+        df, scaler = load_data(self.data_path, for_inference=True)  # Load the scaler
         sequences_padded, _ = get_padded_sequence(df, for_inference=True)
         input_shape = (sequences_padded.shape[1], sequences_padded.shape[2])
         autoencoder = LSTMAutoencoder(input_shape=input_shape)
@@ -22,9 +22,16 @@ class LSTMInferencer:
         reconstructions = self._get_reconstructions(sequences_padded, autoencoder)
         sequences_padded, reconstructions = self._reshape(sequences_padded, reconstructions)
         reconstructions, original = self._remove_paddings(reconstructions, sequences_padded)
+        
+        # pointwise loss
         residuals = self._get_residuals(original, reconstructions)
+        df[numeric_features] = residuals
+        df.to_csv(self.output_path_full)
+        
+        # daily mse
         df = self._get_daily_mse(df, residuals)
-        df.to_csv(self.output_path)
+        df.to_csv(self.output_path_daily)
+
 
     def _get_daily_mse(self, df, residuals):
         df[numeric_features] = residuals

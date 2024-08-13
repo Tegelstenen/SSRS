@@ -1,3 +1,4 @@
+
 # TODO: 
 # - create database ?
 # - Make heatmap relative to its own value ?
@@ -8,28 +9,27 @@
 # - 
 
 import streamlit as st
-
 from utils.helper import HelperFunctions
 from modules.anomaly import AnomalyPlots, AnomalySelectors
-from modules.sidebar import SideBar
+from modules.sidebar import SideBar 
 
  
 ##########################
 # Data and Constants 
 ##########################
-DATA, ERRORS = HelperFunctions.get_all_data()
+DATA, ERRORS, FULL_ERRORS = HelperFunctions.get_all_data()
 BOAT_NAMES = HelperFunctions.get_boats()   
 FEATURES = HelperFunctions.get_shown_features()
 FEATURE_COLORS = HelperFunctions.get_colors() 
-
+ 
 ########################## 
 # Initial page config 
-##########################  
+##########################   
 st.set_page_config(
     page_title="SSRS Anomaly Detection", 
     page_icon="⚓️",
-    layout="wide",
-    initial_sidebar_state="expanded",
+    layout="wide", 
+    initial_sidebar_state="expanded", 
 )
 
 ##########################
@@ -42,11 +42,12 @@ def anomly_body():
  
             HelperFunctions.write_heading("Anomaly Heatmap")
             AnomalyPlots.show_heat_map(boat, ERRORS, FEATURES)
-
+            AnomalyPlots.show_mse_scatter(boat, FULL_ERRORS, FEATURES)
+            
             st.divider()
 
             HelperFunctions.write_heading("Data for the day")
-            date, signal_instance = AnomalySelectors.show_selections(DATA, boat)
+            date, signal_instance = AnomalySelectors.show_selections(ERRORS, boat)
             if date:
                 AnomalyPlots.show_daily_data(
                     date, boat, DATA, FEATURES, FEATURE_COLORS, signal_instance
@@ -59,7 +60,6 @@ def anomly_body():
                 AnomalyPlots.show_differences(
                     DATA, FEATURES, FEATURE_COLORS, date, boat
                 )
-
 
 ##########################
 # Main body of GPS disruptions

@@ -15,7 +15,7 @@ from utils.lstm_utils import load_data, get_padded_sequence, create_dataset
 
 config = ConfigManager()
 
-class Trainer:
+class Trainer:  
     def __init__(self):
         self.data_path = "/models/data/data.csv"
         self.model_path = "/models/tunings"
@@ -27,7 +27,6 @@ class Trainer:
     def run(self):
         self._create_dirs()
         df, scaler = load_data(self.data_path)
-        df = df.query("node_name != '12-10, Drottning Silvia'") # ? What other way to do it if we have limited data
         train_sequences_padded, test_sequences_padded= get_padded_sequence(df)
         input_shape = (train_sequences_padded.shape[1], train_sequences_padded.shape[2])
         autoencoder = LSTMAutoencoder(input_shape=input_shape)

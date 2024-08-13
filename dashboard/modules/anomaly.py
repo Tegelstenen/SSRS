@@ -8,6 +8,7 @@
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 import streamlit as st
 import plotly.express as px
 
@@ -130,11 +131,13 @@ class AnomalyPlots:
             hovermode="x unified", 
             xaxis=dict(
                 title="Time",
+                color="white",  # Set x-axis text color to white
             ),
             dragmode="zoom",
             plot_bgcolor='rgba(225, 228, 233, 0.8)',
-            paper_bgcolor='rgba(155, 158, 166, 0.8)',
+            paper_bgcolor='rgba(0, 0, 0, 0)',  # Transparent background
             template="none",
+            font=dict(color="white"),  # Set all text color to white
             **yaxis_layouts,
         )
 
@@ -182,10 +185,9 @@ class AnomalyPlots:
             y=heatmap_data.index,
             aspect="auto",
             color_continuous_scale=color_scale,
-            # range_color=color_range,
-        )
+            range_color=color_range,
+        ) 
 
-        #  Update layout to enable drag mode and disable zoom
         fig.update_layout(
             dragmode="pan",  # Enable drag mode
             xaxis=dict(fixedrange=True, type="category", showticklabels=False),
@@ -216,6 +218,20 @@ class AnomalyPlots:
         )
 
         st.plotly_chart(fig)
+    
+    @classmethod 
+    def show_mse_scatter(cls, boat: str, full_errors: pd.DataFrame, features: list[str]) -> None:
+        boat_data = full_errors.query(f"node_name == '{boat}'")
+        groups = boat_data.groupby(["TRIP_ID", "date"])[features].mean().reset_index()
+
+        fig = make_subplots(rows=1, cols=1, shared_xaxes=True)
+
+        for feature in features:
+            scatter = go.Scatter(x=groups['date'], y=groups[feature], mode='markers', name=feature)
+            fig.add_trace(scatter)
+
+        fig.update_layout(title=f"Feature Trends for {boat}", xaxis_title="Date", yaxis_title="Feature Values")
+        st.plotly_chart(fig, use_container_width=True)
 
     @classmethod
     def _daily_difference(cls, data: pd.DataFrame, date: str, boat: str, items: str, features: list[str], feature_colors: dict) -> None:
@@ -266,7 +282,8 @@ class AnomalyPlots:
             ),
             dragmode="zoom",  # Enable zoom mode
             plot_bgcolor='rgba(225, 228, 233, 0.8)',
-            paper_bgcolor='rgba(155, 158, 166, 0.8)',
+            paper_bgcolor='rgba(0, 0, 0, 0)',  # Transparent background
+            font=dict(color="white"),
             template="none",
         )
 
@@ -296,7 +313,7 @@ class AnomalyPlots:
                         )
 
 
-    
+                
 class AnomalySelectors:
     @classmethod
     def show_selections(cls, data: pd.DataFrame, boat: str) -> None:
@@ -308,3 +325,5 @@ class AnomalySelectors:
             signal_instance = st.selectbox("Select engine side", ["Starboard", "Port"], key=f"Engine side at {date} for {boat}")
             signal_instance = "SB" if signal_instance == "Starboard" else "P"
         return date, signal_instance
+
+

@@ -16,22 +16,25 @@ class LSTMAutoencoder:
         self.input_shape = input_shape
         self.model = None
         self.best_hps = None
-        self.tuner = kt.RandomSearch(  # TODO: refactor to methods
-            self._build_model, objective="val_loss", max_trials=10
-        )  # TODO: change this tuner into hyperband for final training
+        self.tuner = kt.Hyperband(
+            self._build_model, 
+            objective="val_loss", 
+            directory='my_dir',
+            project_name='lstm_autoencoder'
+        )
 
-    def _build_model(self, hp): #TODO: if wokring add dynamic adding of hidden layers, between 2 to 16
+    def _build_model(self, hp):
         model = keras.models.Sequential()
         model.add(keras.layers.Input(shape=(self.input_shape[0], self.input_shape[1])))
         model.add(keras.layers.Masking(mask_value=-1))
 
         units = hp.Int("units", min_value=32, max_value=512, step=32)
-        model.add(keras.layers.LSTM(units,return_sequences=True))
-        model.add(keras.layers.LSTM(units//2, return_sequences=False))
+        model.add(keras.layers.LSTM(units,return_sequences=True, dropout=0.5))
+        model.add(keras.layers.LSTM(units//2, return_sequences=False, dropout=0.5))
 
         model.add(keras.layers.RepeatVector(self.input_shape[0]))
 
-        model.add(keras.layers.LSTM(units//2, return_sequences=True))
+        model.add(keras.layers.LSTM(units//2, return_sequences=True, dropout=0.5))
         model.add(keras.layers.LSTM(units, return_sequences=True))
 
         model.add(keras.layers.TimeDistributed(keras.layers.Dense(self.input_shape[1])))
@@ -89,7 +92,7 @@ class LSTMAutoencoder:
         self.tuner.search(
             train_dataset,
             validation_data=val_dataset,
-            epochs=5,  # TODO: change once for full training
+            epochs=100,
             shuffle=False,
             callbacks=[stop_early],
         )
@@ -103,8 +106,9 @@ class LSTMAutoencoder:
         history = model.fit(
             train_dataset,
             validation_data=val_dataset,
-            epochs=5,  # TODO: change once for full training to like 500 or smth
+            epochs=500,
             shuffle=False,
+            callbacks=[stop_early],
         )
         logging.model("Getting best epoch")
         val_loss_per_epoch = history.history["val_loss"]

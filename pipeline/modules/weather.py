@@ -2,6 +2,8 @@ import openmeteo_requests
 import requests
 import pandas as pd
 from retry_requests import retry
+import numpy as np
+
 from datetime import timedelta 
 import os
 import logging
@@ -128,7 +130,19 @@ class WeatherProcessor:
         # Drop the original timestamp columns if not needed
         result_times = result_times.drop(columns=['first_timestamp', 'last_timestamp'])
 
-        mean_coords = df.groupby('node_name')[['LAT', 'LON']].mean().reset_index()
+
+        try:
+            mean_coords = df.groupby('node_name')[['LAT', 'LON']].mean().reset_index()
+        except KeyError:
+            logging.error("No LAT or LON columns found in the DataFrame.")
+            logging.error("Returning with NaN values")
+            df['wind_velocity'] = np.nan
+            df['wind_angle'] = np.nan
+            df['alignment_factor'] = np.nan
+            df['LON'] = np.nan
+            df['LAT'] = np.nan
+            df.drop(columns=['datetime'], inplace=True)
+            return df
 
         # Merge the mean coordinates with the result DataFrame
         result_times = pd.merge(result_times, mean_coords, on='node_name')
