@@ -1,4 +1,3 @@
-# TODO: remove defaults
 import keras
 import keras_tuner as kt
 

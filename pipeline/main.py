@@ -1,9 +1,3 @@
-# TODO:
-# - Decide more on cleaning
-# - Extend with more features (?)
-# - use more moudlarisation and utils for everything
-# - implement testing
-
 import argparse
 import logging
 import os
