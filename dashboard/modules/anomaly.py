@@ -16,22 +16,32 @@ class AnomalyPlots:
     def _add_na(data: pd.DataFrame) -> pd.DataFrame:
         # Function to add NA rows
         def add_na_rows(group):
-            first_row = group.iloc[0].copy() 
-            last_row = group.iloc[-1].copy()
+            # Create empty DataFrame with the same structure as the group
+            first_row = pd.DataFrame(columns=group.columns).astype(group.dtypes.to_dict())
+            last_row = pd.DataFrame(columns=group.columns).astype(group.dtypes.to_dict())
             
             # Set all columns except groupby columns to NA
-            for col in first_row.index:
+            for col in group.columns:
                 if col not in ["node_name", "signal_instance", "TRIP_ID"]:
-                    first_row[col] = np.nan
-                    last_row[col] = np.nan
+                    first_row.at[0, col] = np.nan
+                    last_row.at[0, col] = np.nan
             
             # Adjust the time for the new rows
             time_diff = pd.Timedelta(seconds=1)
-            first_row['time'] = group['time'].iloc[0] - time_diff
-            last_row['time'] = group['time'].iloc[-1] + time_diff
+            first_row.at[0, 'time'] = group['time'].iloc[0] - time_diff
+            last_row.at[0, 'time'] = group['time'].iloc[-1] + time_diff
+            
+            # Fill the groupby columns
+            first_row.at[0, 'node_name'] = group.iloc[0]['node_name']
+            first_row.at[0, 'signal_instance'] = group.iloc[0]['signal_instance']
+            first_row.at[0, 'TRIP_ID'] = group.iloc[0]['TRIP_ID']
+            
+            last_row.at[0, 'node_name'] = group.iloc[-1]['node_name']
+            last_row.at[0, 'signal_instance'] = group.iloc[-1]['signal_instance']
+            last_row.at[0, 'TRIP_ID'] = group.iloc[-1]['TRIP_ID']
             
             # Concatenate the new rows with the original group
-            return pd.concat([first_row.to_frame().T, group, last_row.to_frame().T])
+            return pd.concat([first_row, group, last_row])
 
         # Apply the function to each group
         data = data.groupby(["node_name", "signal_instance", "TRIP_ID"], group_keys=False).apply(add_na_rows)
