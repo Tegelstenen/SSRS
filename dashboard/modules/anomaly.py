@@ -1,10 +1,3 @@
-# TODO:
-# - add somthing that highlight the individual trips
-#   - alterntively create a trip separator
-# - Att scatter points of extra high anomaly value to the comparison plots
-#   - add it under a "show anomalies" ticker
-# - maximise usage of config
-
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
