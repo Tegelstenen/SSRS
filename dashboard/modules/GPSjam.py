@@ -3,25 +3,20 @@ import pandas as pd
 import numpy as np
 import folium
 import h3
-import os
-from collections import defaultdict
 from sklearn.preprocessing import MinMaxScaler
 import keras
-from dotenv import load_dotenv
 from geopy.distance import geodesic
-import subprocess
-import glob
 import streamlit as st
 from influxdb_client_3 import InfluxDBClient3, flight_client_options
-import os
 import certifi
-import pandas as pd
-import datetime
 from dotenv import load_dotenv
 from folium import IFrame
-import time
-#import yaml
+
+import subprocess
+import glob
 import os
+import datetime
+import time
 import re
 from collections import defaultdict
 
@@ -252,13 +247,11 @@ class GPSCleanData:
 
 class ScreenDimensions:
     def __init__(self):
-        import tkinter as tk
-        self.root = tk.Tk()
-        self.screen_width = (self.root.winfo_screenwidth()) * 0.9
-        self.screen_height = (self.root.winfo_screenheight()) * 0.73
+        import pyautogui
+        self.screen_width, self.screen_height = pyautogui.size()
 
     def get_dimensions(self):
-        return self.screen_width, self.screen_height
+        return self.screen_width * 0.9, self.screen_height * 0.73
     
 ##--------------------------------------------------------------##
 # Calculates data and shows the GPSplot
