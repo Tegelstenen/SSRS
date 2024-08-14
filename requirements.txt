@@ -11,3 +11,7 @@ streamlit
 plotly
 pytest
 keras-tuner
+boto3
+awswrangler
+pydot
+watchdog

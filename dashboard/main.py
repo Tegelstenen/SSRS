@@ -46,19 +46,19 @@ def anomly_body():
             
             st.divider()
 
-            HelperFunctions.write_heading("Data for the day")
-            date, signal_instance = AnomalySelectors.show_selections(ERRORS, boat)
-            if date:
-                AnomalyPlots.show_daily_data(
-                    date, boat, DATA, FEATURES, FEATURE_COLORS, signal_instance
-                )
-
-            st.divider()
-
             HelperFunctions.write_heading("Comparisons between Port and Starboard")
-            if date:
+            date = AnomalySelectors.show_selections(ERRORS, boat)
+            if date: 
+                
+                data = full_data_db.get_data(boat, date)
+                
+                # TODO: Add back in and make visually pleasing and infromative. Suggestions to stack both sides on same fig
+                # AnomalyPlots.show_daily_data(
+                #     date, boat, data, FEATURES, FEATURE_COLORS
+                # )
+            
                 AnomalyPlots.show_differences(
-                    DATA, FEATURES, FEATURE_COLORS, date, boat
+                    data, FEATURES, FEATURE_COLORS, date, boat
                 )
 
 ##########################
@@ -66,7 +66,6 @@ def anomly_body():
 ########################## 
 def gps_body():
     pass
-
 
 ##########################
 # Sidebar
