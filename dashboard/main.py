@@ -26,7 +26,7 @@ FEATURES = HelperFunctions.get_shown_features()
 FEATURE_COLORS = HelperFunctions.get_colors() 
 full_data_db = Database("full_data")
  
-########################## 
+##########################  
 # Initial page config  
 ##########################   
 st.set_page_config( 
@@ -35,9 +35,9 @@ st.set_page_config(
     layout="wide", 
     initial_sidebar_state="expanded", 
 ) 
-
+ 
 ##########################
-# Body of anomalies 
+# Body of anomalies  
 ##########################
 def anomly_body():
     tabs = st.tabs(BOAT_NAMES)
@@ -61,7 +61,7 @@ def anomly_body():
                 #     date, boat, data, FEATURES, FEATURE_COLORS
                 # )
             
-                AnomalyPlots.show_differences(
+                AnomalyPlots.show_differences( 
                     data, FEATURES, FEATURE_COLORS, date, boat
                 )
 
