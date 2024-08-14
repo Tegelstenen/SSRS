@@ -4,16 +4,20 @@ from boto3.dynamodb.conditions import Key, Attr
 from botocore.exceptions import ClientError
 import awswrangler as wr
 import boto3
+import dotenv
 
 from decimal import Decimal 
 import logging
 import concurrent.futures
 import time
 import random
+import os
 
 from utils.config_manager import ConfigManager
 
 config = ConfigManager()
+
+dotenv.load_dotenv()
 
 # Configure logging
 log_formatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
@@ -27,8 +31,11 @@ root_logger.addHandler(console_handler)
 class Database:
     def __init__(self, table_name: str):
         self.table_name = table_name
-        self.resource = boto3.resource('dynamodb', region_name='eu-north-1')
-        self.client = boto3.client('dynamodb', region_name='eu-north-1')
+        access_key = os.getenv("ACCESS_KEY")
+        secret_key = os.getenv("SECRET_KEY")
+        self.session = boto3.Session(region_name='eu-north-1', aws_access_key_id=access_key, aws_secret_access_key=secret_key)
+        self.resource = boto3.resource('dynamodb', aws_access_key_id=access_key, aws_secret_access_key=secret_key, region_name='eu-north-1')
+        self.client = boto3.client('dynamodb', aws_access_key_id=access_key, aws_secret_access_key=secret_key, region_name='eu-north-1')
         self._create_table()
 
     def get_data(self, node_name: str, date=None) -> pd.DataFrame:
@@ -36,9 +43,9 @@ class Database:
         Makes a query to the DynamoDB table and returns the data for the given node_name (a.k.a. boat) and date.
         """
         if date:
-            result = wr.dynamodb.read_items(table_name=self.table_name, key_condition_expression=(Key("node_name").eq(node_name)), filter_expression=(Attr("date").eq(date)))
+            result = wr.dynamodb.read_items(table_name=self.table_name, key_condition_expression=(Key("node_name").eq(node_name)), filter_expression=(Attr("date").eq(date)), boto3_session=self.session)
         else:
-            result = wr.dynamodb.read_items(table_name=self.table_name, key_condition_expression=(Key("node_name").eq(node_name)))
+            result = wr.dynamodb.read_items(table_name=self.table_name, key_condition_expression=(Key("node_name").eq(node_name)), boto3_session=self.session)
         feature_columns = config.get("MODEL_FEATURES")
         geo_columns = config.get("GEO_FEATURES")
         result = self._object_to_float(result, feature_columns)
@@ -153,15 +160,14 @@ class Database:
         """
         Creates the DynamoDB table if it does not exist.
         """
-        client = boto3.client('dynamodb', region_name='eu-north-1')
-        
+
         if self._table_exist(self.table_name):
             root_logger.info(f"Table {self.table_name} already exists")
             pass
         else:
             try:
                 root_logger.info(f"Creating table {self.table_name}") 
-                table = client.create_table(
+                table = self.client.create_table(
                 TableName=self.table_name,
                 KeySchema=[
                     {"AttributeName": "node_name", "KeyType": "HASH"},  # Partition key
