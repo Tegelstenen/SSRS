@@ -20,5 +20,5 @@ h3
 geopy
 streamlit-autorefresh
 tabulate
-tk
+pyautogui
 

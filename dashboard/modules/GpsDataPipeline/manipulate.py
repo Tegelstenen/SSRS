@@ -3,11 +3,13 @@
 # column names, calculating mean values at 1-second intervals, imputing missing 
 # values, and saving the manipulated data back to CSV files.
 # ------------------------------------------------------------------------------
-
+ 
 import pandas as pd
 import numpy as np
+
 import argparse
 from datetime import datetime, timedelta
+import os
 
 
 # Helper functions ----------
@@ -100,8 +102,7 @@ parser.add_argument("directory", type=str, help="Directory where raw data is sto
 args = parser.parse_args()
 directory = args.directory
 
-geo_path = f"{directory}\geo_data.csv" #normal was this/
-#engine_path = f"{directory}/engine_data.csv"
+geo_path = os.path.join(directory, "geo_data.csv")
 
 print("---------- Loading Data ----------")
 geo = pd.read_csv(geo_path)
