@@ -11,3 +11,8 @@ streamlit
 plotly
 pytest
 keras-tuner
+streamlit-folium
+h3
+geopy
+streamlit-autorefresh
+tabulate
