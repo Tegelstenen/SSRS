@@ -1,5 +1,7 @@
 import streamlit as st
 
+import os
+
 from utils.helper import HelperFunctions
 from utils.config_manager import ConfigManager
 
@@ -9,17 +11,18 @@ class SideBar:
     @staticmethod
     def images() -> None:
         grpahics_dir = config.get("GRAPHICS_DIR")
-        base_dir = config.get("BASE_DIR")
+        #base_dir = cls.config.get("BASE_DIR")
+        base_dir = ''
         st.sidebar.markdown(
                 """<p align="center"><img src='data:image/png;base64,{}' class='img-fluid' style='width: 50%;'></p>""".format(
-                    HelperFunctions.img_to_bytes(f"{base_dir}/{grpahics_dir}/SSRS.png")
+                    HelperFunctions.img_to_bytes(os.path.join(base_dir, grpahics_dir, "SSRS.png"))
                 ),
                 unsafe_allow_html=True,
             )
         
         st.sidebar.markdown(
             """<p align="center"><img src='data:image/png;base64,{}' class='img-fluid' style='filter: invert(1); width: 50%;'></p>""".format(
-                HelperFunctions.img_to_bytes(f"{base_dir}/{grpahics_dir}/text.png")
+                HelperFunctions.img_to_bytes(os.path.join(base_dir, grpahics_dir, "text.png"))
             ),
             unsafe_allow_html=True,
         )
