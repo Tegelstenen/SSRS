@@ -1,10 +1,3 @@
-# TODO:
-# - add somthing that highlight the individual trips
-#   - alterntively create a trip separator
-# - Att scatter points of extra high anomaly value to the comparison plots
-#   - add it under a "show anomalies" ticker
-# - maximise usage of config
-
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
@@ -128,6 +121,7 @@ class AnomalyPlots:
             height=400,  # Adjust as needed
             title=title,
             legend=dict(groupclick="toggleitem"),
+            showlegend=False,
             hovermode="x unified", 
             xaxis=dict(
                 title="Time",
@@ -138,6 +132,10 @@ class AnomalyPlots:
             paper_bgcolor='rgba(0, 0, 0, 0)',  # Transparent background
             template="none",
             font=dict(color="white"),  # Set all text color to white
+            hoverlabel=dict(
+                bgcolor="white",  # Set hover background to white
+                font=dict(color="black")  # Set hover text color to black
+            ),
             **yaxis_layouts,
         )
 

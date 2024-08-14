@@ -24,18 +24,18 @@ class HelperFunctions:
 
     @staticmethod
     def _get_full_path(cls) -> str:
-        base_dir = cls.config.get("BASE_DIR")
+        #base_dir = cls.config.get("BASE_DIR")
+        base_dir = os.getcwd()
         app_data_dir = cls.config.get("APP_DATA_DIR")
         full_path = os.path.join(base_dir, app_data_dir)
         return full_path
-
+    
     @classmethod
     def get_all_data(cls) -> pd.DataFrame:
         full_path = cls._get_full_path(cls)
-
-        data = cls._get_data(f"{full_path}/data.csv")
-        errors = cls._get_data(f"{full_path}/errors.csv")
-        full_errors = cls._get_data(f"{full_path}/full_errors.csv")
+        data = cls._get_data(os.path.join(full_path, "data.csv"))
+        errors = cls._get_data(os.path.join(full_path, "errors.csv"))
+        full_errors = cls._get_data(os.path.join(full_path, "full_errors.csv"))
         return data, errors, full_errors
 
     @classmethod

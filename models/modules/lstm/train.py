@@ -1,10 +1,3 @@
-
-# TODO: Clean up inside inferer (given that it works inside aiqu)
-# TODO: test the entire final df that is used for training such that it is conforming to what i was imagining
-# TODO: fix the testings
-# TODO: Add testings to like everything if time permits
-# TODO: SPLIT DATA BY DATE TO INFER ON LATEST 2 MONTHS
-
 import os
 import logging
 import pickle
