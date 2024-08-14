@@ -68,6 +68,7 @@ def anomly_body():
 ##########################
 # Main body of GPS disruptions
 ########################## 
+
 def gps_body(): 
     # Get working direcroty for dynamic paths
     gps_cwd = GPScwd() 
@@ -143,6 +144,7 @@ def gps_body():
 
         refresh_status = gps_auto_reload.HelperLoop()
         print(refresh_status)
+
 
 ##########################
 # Sidebar

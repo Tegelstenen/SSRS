@@ -158,12 +158,10 @@ class AnomalyPlots:
         return sb_fig, p_fig
     
     @classmethod
-    def show_daily_data(cls, date: str, boat: str, data: pd.DataFrame, features: list[str], feature_colors: dict, signal_instance: str) -> None:
+    def show_daily_data(cls, date: str, boat: str, data: pd.DataFrame, features: list[str], feature_colors: dict) -> None:
         starboard, port = cls._daily_data(date, boat, data, features, feature_colors)
-        if signal_instance == "SB":
-            st.plotly_chart(starboard, key=f"{boat}_{date}_chart")
-        elif signal_instance == "P":
-            st.plotly_chart(port, key=f"{boat}_{date}_chart")
+        st.plotly_chart(starboard, key=f"{boat}_{date}_chart_starboard")
+        st.plotly_chart(port, key=f"{boat}_{date}_chart_port")
 
     @classmethod 
     def show_heat_map(cls, boat, errors, features):
@@ -228,7 +226,12 @@ class AnomalyPlots:
             scatter = go.Scatter(x=groups['date'], y=groups[feature], mode='markers', name=feature)
             fig.add_trace(scatter)
 
-        fig.update_layout(title=f"Feature Trends for {boat}", xaxis_title="Date", yaxis_title="Feature Values")
+            fig.update_layout(
+            title=f"Feature Trends for {boat}",
+            xaxis_title="Date",
+            yaxis_title="Feature Values",
+            yaxis=dict(range=[0, 0.5])  # Set y-axis range to be between 0 and 1
+        )
         st.plotly_chart(fig, use_container_width=True)
 
     @classmethod
@@ -315,13 +318,8 @@ class AnomalyPlots:
 class AnomalySelectors:
     @classmethod
     def show_selections(cls, data: pd.DataFrame, boat: str) -> None:
-        col1, col2 = st.columns([2, 2])    
-        with col1:
-            dates = data.query(f'node_name == "{boat}"')["date"].unique()
-            date = st.selectbox("Select a date", dates, key=f"{boat} at {dates}")
-        with col2:
-            signal_instance = st.selectbox("Select engine side", ["Starboard", "Port"], key=f"Engine side at {date} for {boat}")
-            signal_instance = "SB" if signal_instance == "Starboard" else "P"
-        return date, signal_instance
+        dates = data.query(f'node_name == "{boat}"')["date"].unique()
+        date = st.selectbox("Select a date", dates, key=f"{boat} at {dates}")
+        return date
 
 

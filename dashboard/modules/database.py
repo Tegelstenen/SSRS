@@ -23,7 +23,6 @@ console_handler = logging.StreamHandler()
 console_handler.setFormatter(log_formatter)
 console_handler.setLevel(logging.INFO) 
 root_logger.addHandler(console_handler)
- 
 
 class Database:
     def __init__(self, table_name: str):

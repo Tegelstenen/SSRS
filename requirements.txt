@@ -11,8 +11,13 @@ streamlit
 plotly
 pytest
 keras-tuner
+boto3
+awswrangler
+pydot
+watchdog
 streamlit-folium
 h3
 geopy
 streamlit-autorefresh
 tabulate
+

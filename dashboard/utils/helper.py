@@ -5,7 +5,6 @@ import streamlit as st
 import os
 import base64
 from pathlib import Path
-from typing import Tuple
 
 from utils.config_manager import ConfigManager
 
@@ -32,7 +31,7 @@ class HelperFunctions:
         return full_path
     
     @classmethod
-    def get_all_data(cls) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    def get_all_data(cls) -> pd.DataFrame:
         full_path = cls._get_full_path(cls)
         data = cls._get_data(os.path.join(full_path, "data.csv"))
         errors = cls._get_data(os.path.join(full_path, "errors.csv"))

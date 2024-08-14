@@ -6,6 +6,7 @@ import keras
 import tensorflow as tf
 
 import pickle
+import os
 
 from utils.config_manager import ConfigManager
 
@@ -49,7 +50,9 @@ def load_data(path, for_inference=False):
     df.dropna(inplace=True)
     
     if for_inference:
-        with open('models/tunings/scaler.pkl', 'rb') as f:
+        cwd = os.getcwd() # ! Might cause error
+        path = os.path.join(cwd, "models/tunings/scaler.pkl")
+        with open(path, 'rb') as f:
             scaler = pickle.load(f)
         df, _ = _scale_data(df, scaler)
     else:
