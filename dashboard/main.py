@@ -1,11 +1,11 @@
 
 # TODO: Write Readme
-# TODO: Set up database instead of storing locally csv files
-# TODO: Clean up axels shit
-# TODO: Think of to deploy the stremlit
+# TODO: Set up database for errors and full_errors
+# TODO: Reimplement gps map with plotly library
 
 import streamlit as st
 from streamlit_folium import folium_static
+import dotenv
 
 import os
 
@@ -16,11 +16,12 @@ from modules.GPSjam import GPSAnalyzer, ScreenDimensions, GPSCleanData, GPSDataP
 from modules.sidebar import SideBar
 from modules.database import Database
 
+dotenv.load_dotenv()
   
 ##########################  
 # Data and Constants 
 ##########################
-DATA, ERRORS, FULL_ERRORS = HelperFunctions.get_all_data()
+_, ERRORS, FULL_ERRORS = HelperFunctions.get_all_data()
 BOAT_NAMES = HelperFunctions.get_boats()   
 FEATURES = HelperFunctions.get_shown_features()
 FEATURE_COLORS = HelperFunctions.get_colors() 
@@ -43,7 +44,6 @@ def anomly_body():
     tabs = st.tabs(BOAT_NAMES)
     for tab, boat in zip(tabs, BOAT_NAMES): 
         with tab:
- 
             HelperFunctions.write_heading("Anomaly Heatmap")
             AnomalyPlots.show_heat_map(boat, ERRORS, FEATURES)
             AnomalyPlots.show_mse_scatter(boat, FULL_ERRORS, FEATURES)
@@ -158,16 +158,32 @@ def sidebar_body():
 ##########################
 # main
 ##########################
+def authenticate_api_key(api_key):
+    if api_key != os.getenv("PASSWORD"):
+        return False
+    return True
+
 def main():
+    if "authenticated" not in st.session_state:
+        st.session_state["authenticated"] = False
 
-    sidebar_body()
+    if not st.session_state["authenticated"]:
+        api_key = st.text_input("Enter password:", type="password")
+        if authenticate_api_key(api_key):
+            st.session_state["authenticated"] = True
+            st.rerun()
+        else:
+            st.error("Invalid API key. Access denied.")
+            st.stop()
+    else:
+        sidebar_body()
 
-    if st.session_state.get("page") == "overview":
-        anomly_body()
-    elif st.session_state.get("page") == "gps_disruptions":
-        gps_body()
+        if st.session_state.get("page") == "overview":
+            anomly_body()
+        elif st.session_state.get("page") == "gps_disruptions":
+            gps_body()
 
-    return None
+        return None
 
 
 # Run main()
