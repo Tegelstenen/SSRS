@@ -12,6 +12,7 @@ import concurrent.futures
 import time
 import random
 import os
+import os
 
 from utils.config_manager import ConfigManager
 
@@ -39,12 +40,16 @@ class Database:
         self._create_table()
 
     def get_data(self, node_name: str, date=None) -> pd.DataFrame:
+        
         """
         Makes a query to the DynamoDB table and returns the data for the given node_name (a.k.a. boat) and date.
         """
+        
         if date:
             result = wr.dynamodb.read_items(table_name=self.table_name, key_condition_expression=(Key("node_name").eq(node_name)), filter_expression=(Attr("date").eq(date)), boto3_session=self.session)
+            result = wr.dynamodb.read_items(table_name=self.table_name, key_condition_expression=(Key("node_name").eq(node_name)), filter_expression=(Attr("date").eq(date)), boto3_session=self.session)
         else:
+            result = wr.dynamodb.read_items(table_name=self.table_name, key_condition_expression=(Key("node_name").eq(node_name)), boto3_session=self.session)
             result = wr.dynamodb.read_items(table_name=self.table_name, key_condition_expression=(Key("node_name").eq(node_name)), boto3_session=self.session)
         feature_columns = config.get("MODEL_FEATURES")
         geo_columns = config.get("GEO_FEATURES")
@@ -167,6 +172,7 @@ class Database:
         else:
             try:
                 root_logger.info(f"Creating table {self.table_name}") 
+                table = self.client.create_table(
                 table = self.client.create_table(
                 TableName=self.table_name,
                 KeySchema=[
