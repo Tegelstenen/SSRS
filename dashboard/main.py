@@ -22,12 +22,9 @@ dotenv.load_dotenv()
 ##########################  
 # Data and Constants 
 ##########################
-_, ERRORS, FULL_ERRORS = HelperFunctions.get_all_data()
 BOAT_NAMES = HelperFunctions.get_boats()   
 FEATURES = HelperFunctions.get_shown_features()
 FEATURE_COLORS = HelperFunctions.get_colors() 
-
-
  
 ##########################  
 # Initial page config  
@@ -43,17 +40,17 @@ st.set_page_config(
 # Body of anomalies  
 ##########################
 def anomly_body():
+    
     tabs = st.tabs(BOAT_NAMES)
     for tab, boat in zip(tabs, BOAT_NAMES): 
         with tab: 
             HelperFunctions.write_heading("Anomaly Heatmap")
-            AnomalyPlots.show_heat_map(boat, ERRORS, FEATURES)
-            AnomalyPlots.show_mse_scatter(boat, FULL_ERRORS, FEATURES)
+            AnomalyPlots.show_heat_map(boat)
+            AnomalyPlots.show_mse_scatter(boat)
             
             st.divider()
- 
             HelperFunctions.write_heading("Comparisons between Port and Starboard")
-            date = AnomalySelectors.show_selections(ERRORS, boat)
+            date = AnomalySelectors.show_selections(boat)
             
             if date:  
                 smoothing_window = st.slider("Smoothing window", min_value=1, max_value=100, value=1, key=f"{boat} at {date}")
