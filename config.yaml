@@ -82,7 +82,7 @@ MODEL_FEATURES:
   - "ENGINE_LOAD"
   - "ENGOILPRES"
   - "ENGTEMP"
-  - "ENG_HOURS"
+  - "ENG_HOURS" # currently not used
   - "FUELRATE"
   - "RPM"
   - "SOG"
@@ -104,6 +104,7 @@ ENGINE_FEATURES:
 GEO_FEATURES:
   - "wind_velocity"
   - "alignment_factor"
+  # Maybe add SOG?
 
 # What scale to use for the anomaly heatmap
 HEAT_MAP_SCALE: [0, 0.5]
