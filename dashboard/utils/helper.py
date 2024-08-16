@@ -33,7 +33,7 @@ class HelperFunctions:
     @classmethod
     def get_all_data(cls) -> pd.DataFrame:
         full_path = cls._get_full_path(cls)
-        data = cls._get_data(os.path.join(full_path, "data.csv"))
+        data = None
         errors = cls._get_data(os.path.join(full_path, "errors.csv"))
         full_errors = cls._get_data(os.path.join(full_path, "full_errors.csv"))
         return data, errors, full_errors

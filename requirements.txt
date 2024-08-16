@@ -11,8 +11,6 @@ streamlit
 plotly
 pytest
 keras-tuner
-boto3
-awswrangler
 pydot
 watchdog
 streamlit-folium
@@ -21,6 +19,9 @@ geopy
 streamlit-autorefresh
 tabulate
 pyautogui
+pymysql
+cryptography
+
 
 
 

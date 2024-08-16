@@ -11,8 +11,13 @@ import time
 from datetime import timedelta
 
 from utils.config_manager import ConfigManager
+from modules.database import Database
+
+
+
 
 config = ConfigManager()
+
 FEATURES = config.get("ENGINE_FEATURES")
 FEATURE_COLORS = {
     feature: px.colors.qualitative.Plotly[i % len(px.colors.qualitative.Plotly)]
@@ -34,11 +39,11 @@ class AnomalyPlots:
                 
 
     @classmethod
-    @st.cache_data(show_spinner="Loading Heatmap")
-    def show_heat_map(cls, boat, errors, features):
-        data = errors[errors["node_name"] == boat]
+    def show_heat_map(cls, boat):
+        data = _get_daily_errors(boat)
+        
         # Transpose the data to have features as rows and dates as columns
-        heatmap_data = data.set_index("date")[features].T
+        heatmap_data = data.set_index("date")[FEATURES].T
 
         # Define the color scale and range
         color_scale = px.colors.sequential.Reds
@@ -64,29 +69,18 @@ class AnomalyPlots:
         st.plotly_chart(fig)
 
     @classmethod
-    @st.cache_data(show_spinner="Loading Scatter Plot")
-    def show_mse_scatter(
-        cls, boat: str, full_errors: pd.DataFrame, features: list[str]
-    ) -> None:
-        boat_data = full_errors.query(f"node_name == '{boat}'")
-
-        boat_data["datetime"] = pd.to_datetime(
-            boat_data["date"] + " " + boat_data["time"]
-        )
-        earliest_dates = boat_data.groupby("TRIP_ID")["datetime"].min().reset_index()
-        boat_data = pd.merge(
-            boat_data, earliest_dates, on="TRIP_ID", suffixes=("", "_earliest")
-        )
-        boat_data["date"] = boat_data["datetime_earliest"]
-        boat_data = boat_data.drop(["datetime", "datetime_earliest"], axis=1)
-        groups = boat_data.groupby(["date"])[features].mean().reset_index()
-
+    def show_mse_scatter(cls, boat: str) -> None:
+        
+        FULL_ERRORS = _get_full_errors()
+        
+        boat_data = FULL_ERRORS.query(f"node_name == '{boat}'")
+    
         fig = make_subplots(rows=1, cols=1, shared_xaxes=True)
 
-        for feature in features:
+        for feature in FEATURES:
             scatter = go.Scatter(
-                x=groups["date"],
-                y=groups[feature],
+                x=boat_data["date"],
+                y=boat_data[feature],
                 mode="markers",
                 name=feature,
                 marker=dict(
@@ -123,7 +117,8 @@ class AnomalyPlots:
 
 class AnomalySelectors:
     @classmethod
-    def show_selections(cls, data: pd.DataFrame, boat: str) -> None:
+    def show_selections(cls, boat: str) -> None:
+        data = _get_daily_errors(boat)
         dates = data.query(f'node_name == "{boat}"')["date"].unique()
         date = st.selectbox("Select a date", dates, key=f"{boat} at {dates}")
         return date
@@ -132,6 +127,8 @@ class AnomalySelectors:
 @st.cache_data(show_spinner="Loading data")
 def _prepare_data(boat, date, _db_client, feature):
     df = _get_data(boat, date, _db_client, feature)
+    if df.empty:
+        return df  # Return the empty DataFrame if no data is found
     df = _generate_trip_id(df)
     df = _set_signal_instance(df)
     df = _remove_outliers(df)
@@ -267,3 +264,25 @@ def _create_traces(df, feature, smoothing_window):
         )
 
     return traces
+
+@st.cache_data(show_spinner="Loading data")
+def _get_full_errors():
+    db = Database()
+    cursor = db.connection.cursor()
+    table_name = "error_data"
+    fetched_data = db.fetch_all(table_name)
+    full_errors = pd.DataFrame(fetched_data)
+    db.close()
+    return full_errors
+
+@st.cache_data(show_spinner="Loading data")
+def _get_daily_errors(boat):
+    FULL_ERRORS = _get_full_errors()
+    data = (FULL_ERRORS
+            .query(f"node_name == '{boat}'")
+            .assign(date=lambda x: pd.to_datetime(x['date']).dt.strftime('%Y-%m-%d'))
+            .groupby(["node_name", "date"])
+            .mean()
+            .reset_index())
+            
+    return data
