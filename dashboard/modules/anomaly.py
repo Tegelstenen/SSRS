@@ -4,183 +4,44 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import streamlit as st
 import plotly.express as px
+from modules.get_data import InfluxDBClient
+from scipy.stats import zscore
+
+import time
+from datetime import timedelta
 
 from utils.config_manager import ConfigManager
 
 config = ConfigManager()
-AVOID_IN_COMPARISON_PLOTS = config.get("AVOID_IN_COMPARISON_PLOTS")
+FEATURES = config.get("ENGINE_FEATURES")
+FEATURE_COLORS = {
+    feature: px.colors.qualitative.Plotly[i % len(px.colors.qualitative.Plotly)]
+    for i, feature in enumerate(FEATURES)
+}
 
 
 class AnomalyPlots:
     @staticmethod
-    def _add_na(data: pd.DataFrame) -> pd.DataFrame:
-        # Function to add NA rows
-        def add_na_rows(group):
-            # Create empty DataFrame with the same structure as the group
-            first_row = pd.DataFrame(columns=group.columns).astype(group.dtypes.to_dict())
-            last_row = pd.DataFrame(columns=group.columns).astype(group.dtypes.to_dict())
-            
-            # Set all columns except groupby columns to NA
-            for col in group.columns:
-                if col not in ["node_name", "signal_instance", "TRIP_ID"]:
-                    first_row.at[0, col] = np.nan
-                    last_row.at[0, col] = np.nan
-            
-            # Adjust the time for the new rows
-            time_diff = pd.Timedelta(seconds=1)
-            first_row.at[0, 'time'] = group['time'].iloc[0] - time_diff
-            last_row.at[0, 'time'] = group['time'].iloc[-1] + time_diff
-            
-            # Fill the groupby columns
-            first_row.at[0, 'node_name'] = group.iloc[0]['node_name']
-            first_row.at[0, 'signal_instance'] = group.iloc[0]['signal_instance']
-            first_row.at[0, 'TRIP_ID'] = group.iloc[0]['TRIP_ID']
-            
-            last_row.at[0, 'node_name'] = group.iloc[-1]['node_name']
-            last_row.at[0, 'signal_instance'] = group.iloc[-1]['signal_instance']
-            last_row.at[0, 'TRIP_ID'] = group.iloc[-1]['TRIP_ID']
-            
-            # Concatenate the new rows with the original group
-            return pd.concat([first_row, group, last_row])
-
-        # Apply the function to each group
-        data = data.groupby(["node_name", "signal_instance", "TRIP_ID"], group_keys=False).apply(add_na_rows)
-        
-        # Reset the index and sort by time
-        data = data.reset_index(drop=True).sort_values(by=["node_name", "signal_instance", "TRIP_ID", "time"])
-        
-        return data
-    
-    @staticmethod
-    def _query_data(
-        data: pd.DataFrame, date: str, boat: str, features: list[str]
-    ) -> pd.DataFrame:
-        data = (
-            data.query(f'node_name == "{boat}" & date == "{date}"')
-            .filter(items=["node_name", "time", "signal_instance", "TRIP_ID"] + features)
-            .rename(columns={"SOG_adapt": "SOG"})
-            .sort_values(by="time")
-        )
-        return data
-
-    @staticmethod
-    def _add_date(data: pd.DataFrame, date: str) -> pd.DataFrame:
-        data["time"] = pd.to_datetime(
-            date + " " + data["time"], format="%Y-%m-%d %H:%M:%S"
-        )
-        return data
-
-    @staticmethod
-    def _smooth_data(data: pd.DataFrame, features: list[str]) -> pd.DataFrame:
-        data[features] = data[features].rolling(window=20).mean()
-        return data
-
-    @staticmethod
-    def _split_data(data: pd.DataFrame) -> pd.DataFrame:
-        sb_data = data[data["signal_instance"] == "SB"]
-        p_data = data[data["signal_instance"] == "P"]
-        return sb_data, p_data
+    def plot_engine_features(boat, date, smoothing_window):
+        db_client = _get_db_client()
+        cols = st.columns(2)
+        for i, feature in enumerate(FEATURES):
+            col = cols[i % 2]  # Alternate between the two columns
+            with col:
+                df = _prepare_data(boat, date, db_client, feature)
+                traces = _create_traces(df, feature, smoothing_window)
+                _plot_figures(feature, traces)
+                
 
     @classmethod
-    def _preprocess_data(
-        cls, data: pd.DataFrame, features: list[str], date: str, boat: str
-    ) -> tuple[pd.DataFrame, pd.DataFrame]:
-        data = cls._query_data(data, date, boat, features)
-        data = cls._add_date(data, date)
-        data = cls._add_na(data)
-        data = cls._smooth_data(data, features)
-        sb_data, p_data = cls._split_data(data)
-        return sb_data, p_data
-    
-    @staticmethod
-    def _create_single_plot(
-        data: pd.DataFrame, features: list[str], feature_colors: dict, title: str
-    ) -> go.Figure:
-        fig = go.Figure()
-
-        for i, feature in enumerate(features):
-            fig.add_trace(
-                go.Scatter(
-                    x=data["time"],
-                    y=data[feature],
-                    name=feature,
-                    line=dict(color=feature_colors.get(feature, "black")),
-                    yaxis=f"y{i+1}",
-                )
-            )
-
-        # Update layout with multiple y-axes
-        yaxis_layouts = {
-            f"yaxis{i+1}": dict(
-                title="",
-                titlefont=dict(color=feature_colors.get(feature, "black")),
-                tickfont=dict(color=feature_colors.get(feature, "black")),
-                overlaying="y" if i > 0 else None,
-                side="right" if i % 2 else "left", 
-                position=1.0 - (i * 0.04) if i % 2 else 0.0 + (i * 0.04),
-                showgrid=False,
-                zeroline=False,
-                showticklabels=False,
-                showline=False,
-                fixedrange=True,  # Prevent zooming on y-axis
-            )
-            for i, feature in enumerate(features)
-        }
-
-        fig.update_layout(
-            height=400,  # Adjust as needed
-            title=title,
-            legend=dict(groupclick="toggleitem"),
-            showlegend=False,
-            hovermode="x unified", 
-            xaxis=dict(
-                title="Time",
-                color="white",  # Set x-axis text color to white
-            ),
-            dragmode="zoom",
-            plot_bgcolor='rgba(225, 228, 233, 0.8)',
-            paper_bgcolor='rgba(0, 0, 0, 0)',  # Transparent background
-            template="none",
-            font=dict(color="white"),  # Set all text color to white
-            hoverlabel=dict(
-                bgcolor="white",  # Set hover background to white
-                font=dict(color="black")  # Set hover text color to black
-            ),
-            **yaxis_layouts,
-        )
-
-        return fig
-
-    @classmethod
-    def _daily_data(
-        cls,
-        date: str,
-        boat: str,
-        data: pd.DataFrame,
-        features: list[str],
-        feature_colors: dict,
-    ) -> tuple[go.Figure, go.Figure]:
-        sb_data, p_data = cls._preprocess_data(data, features, date, boat)
-
-        sb_fig = cls._create_single_plot(sb_data, features, feature_colors, f"")
-        p_fig = cls._create_single_plot(p_data, features, feature_colors, f"")
-
-        return sb_fig, p_fig
-    
-    @classmethod
-    def show_daily_data(cls, date: str, boat: str, data: pd.DataFrame, features: list[str], feature_colors: dict) -> None:
-        starboard, port = cls._daily_data(date, boat, data, features, feature_colors)
-        st.plotly_chart(starboard, key=f"{boat}_{date}_chart_starboard")
-        st.plotly_chart(port, key=f"{boat}_{date}_chart_port")
-
-    @classmethod 
+    @st.cache_data(show_spinner="Loading Heatmap")
     def show_heat_map(cls, boat, errors, features):
-        data = errors[errors["node_name"] == boat] 
+        data = errors[errors["node_name"] == boat]
         # Transpose the data to have features as rows and dates as columns
         heatmap_data = data.set_index("date")[features].T
 
         # Define the color scale and range
-        color_scale = px.colors.sequential.Reds 
+        color_scale = px.colors.sequential.Reds
         color_range = config.get("HEAT_MAP_SCALE")
 
         # Create the heatmap
@@ -192,98 +53,60 @@ class AnomalyPlots:
             aspect="auto",
             color_continuous_scale=color_scale,
             range_color=color_range,
-        ) 
+        )
 
         fig.update_layout(
             dragmode="pan",  # Enable drag mode
             xaxis=dict(fixedrange=True, type="category", showticklabels=False),
             yaxis=dict(fixedrange=True),  # Disable zoom on y-axis
-            title=go.layout.Title(
-                text=(
-                    "<sup>The plot can be used to see individual days where the error where larger than usual <br>"
-                    "Below you can select a date to see the individual values for that day</sup>"
-                ),
-                xref="paper",
-                x=0.5,
-                xanchor="center",
-                font=dict(size=20),
-            ),
-        )
-
-        fig.add_annotation(
-            text="",
-            align="left",
-            showarrow=False,
-            xref="paper",
-            yref="paper",
-            xanchor="center",
-            x=0.5,
-            y=1.3,
-            bordercolor="black",
-            borderwidth=1,
         )
 
         st.plotly_chart(fig)
-    
-    @classmethod 
-    def show_mse_scatter(cls, boat: str, full_errors: pd.DataFrame, features: list[str]) -> None:
+
+    @classmethod
+    @st.cache_data(show_spinner="Loading Scatter Plot")
+    def show_mse_scatter(
+        cls, boat: str, full_errors: pd.DataFrame, features: list[str]
+    ) -> None:
         boat_data = full_errors.query(f"node_name == '{boat}'")
-        groups = boat_data.groupby(["TRIP_ID", "date"])[features].mean().reset_index()
+
+        boat_data["datetime"] = pd.to_datetime(
+            boat_data["date"] + " " + boat_data["time"]
+        )
+        earliest_dates = boat_data.groupby("TRIP_ID")["datetime"].min().reset_index()
+        boat_data = pd.merge(
+            boat_data, earliest_dates, on="TRIP_ID", suffixes=("", "_earliest")
+        )
+        boat_data["date"] = boat_data["datetime_earliest"]
+        boat_data = boat_data.drop(["datetime", "datetime_earliest"], axis=1)
+        groups = boat_data.groupby(["date"])[features].mean().reset_index()
 
         fig = make_subplots(rows=1, cols=1, shared_xaxes=True)
 
         for feature in features:
-            scatter = go.Scatter(x=groups['date'], y=groups[feature], mode='markers', name=feature)
+            scatter = go.Scatter(
+                x=groups["date"],
+                y=groups[feature],
+                mode="markers",
+                name=feature,
+                marker=dict(
+                    color=FEATURE_COLORS.get(feature, "black")
+                ),  # Use the color mapping
+            )
             fig.add_trace(scatter)
 
             fig.update_layout(
-            title=f"Feature Trends for {boat}",
-            xaxis_title="Date",
-            yaxis_title="Feature Values",
-            yaxis=dict(range=[0, 0.5])  # Set y-axis range to be between 0 and 1
-        )
-        st.plotly_chart(fig, use_container_width=True)
-
-    @classmethod
-    def _daily_difference(cls, data: pd.DataFrame, date: str, boat: str, items: str, features: list[str], feature_colors: dict) -> None:
-        data = cls._query_data(data, date, boat, features)
-        data = cls._add_date(data, date)
-        data = cls._add_na(data)
-        data = data.sort_values("time")
-        base_color = feature_colors.get(
-            items[-1], "#000000"
-        ) 
-        base_color_rgb = tuple(
-            int(base_color.lstrip("#")[i : i + 2], 16) for i in (0, 2, 4)
-        )
-        def adjust_color_brightness(color, factor):
-            return tuple(min(255, int(c * factor)) for c in color)
-
-        port_color = f"rgb{adjust_color_brightness(base_color_rgb, 0.7)}"  # Darker shade
-        starboard_color = (
-            f"rgb{adjust_color_brightness(base_color_rgb, 1.3)}"  # Lighter shade
-        )
-
-        fig = go.Figure()
-
-        for signal in data["signal_instance"].unique():
-            filtered_data = data[data["signal_instance"] == signal]
-            color = port_color if signal == "P" else starboard_color
-            fig.add_trace(
-                go.Scatter(
-                    x=filtered_data["time"],
-                    y=filtered_data[items[-1]],
-                    mode="lines",
-                    name=signal,
-                    line=dict(color=color),
-                    marker=dict(size=5),
-                )
+                title=f"Feature Trends for {boat}",
+                xaxis_title="Date",
+                yaxis_title="Feature Values",
+                yaxis=dict(range=[0, 0.35]),  # Set y-axis range to be between 0 and 1
             )
 
         # Update layout to place legend on top
         fig.update_layout(
-            title=items[-1],
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5),
+            legend=dict(
+                orientation="h", yanchor="bottom", y=1.07, xanchor="center", x=0.5
+            ),
             hovermode="x",
             xaxis=dict(
                 title="Time",
@@ -292,39 +115,12 @@ class AnomalyPlots:
                 fixedrange=True,  # Prevent zooming on y-axis
             ),
             dragmode="zoom",  # Enable zoom mode
-            plot_bgcolor='rgba(225, 228, 233, 0.8)',
-            paper_bgcolor='rgba(0, 0, 0, 0)',  # Transparent background
-            font=dict(color="white"),
-            template="none",
+            plot_bgcolor="rgba(225, 228, 233, 0.8)",
         )
 
         st.plotly_chart(fig)
 
-    @classmethod
-    def show_differences(cls, data: pd.DataFrame, features: list[str], feature_colors: dict, date: str, boat: str) -> None:
-        
-        features = [f for f in features if f not in AVOID_IN_COMPARISON_PLOTS]
-        num_features = len(features) 
 
-        for i in range(0, num_features, 2):
-            # Create a new row with up to two columns
-            cols = st.columns(2)
-            
-            for j, col in enumerate(cols):
-                if i + j < num_features:  # Check if there's a feature for this column
-                    feature = features[i + j]
-                    with col:
-                        cls._daily_difference(
-                            data,
-                            date,
-                            boat,
-                            ["time", "signal_instance", feature],
-                            features,
-                            feature_colors,
-                        )
-
-
-                
 class AnomalySelectors:
     @classmethod
     def show_selections(cls, data: pd.DataFrame, boat: str) -> None:
@@ -333,3 +129,141 @@ class AnomalySelectors:
         return date
 
 
+@st.cache_data(show_spinner="Loading data")
+def _prepare_data(boat, date, _db_client, feature):
+    df = _get_data(boat, date, _db_client, feature)
+    df = _generate_trip_id(df)
+    df = _set_signal_instance(df)
+    df = _remove_outliers(df)
+    df.sort_values("time", inplace=True, ascending=True)
+    return df
+
+
+def _set_signal_instance(df: pd.DataFrame) -> pd.DataFrame:
+    df["signal_instance"] = df["signal_instance"].astype(str)
+    df["signal_instance"] = df["signal_instance"].replace({"0": "P", "1": "SB"})
+    return df
+
+
+def _add_na(data: pd.DataFrame) -> pd.DataFrame:
+    # Function to add NA rows
+    def add_na_rows(group):
+        # Create empty DataFrame with the same structure as the group
+        first_row = pd.DataFrame(columns=group.columns).astype(group.dtypes.to_dict())
+        last_row = pd.DataFrame(columns=group.columns).astype(group.dtypes.to_dict())
+
+        # Set all columns except groupby columns to NA
+        for col in group.columns:
+            if col not in ["node_name", "signal_instance", "TRIP_ID"]:
+                first_row.at[0, col] = np.nan
+                last_row.at[0, col] = np.nan
+
+        # Adjust the time for the new rows
+        time_diff = pd.Timedelta(seconds=1)
+        first_row.at[0, "time"] = group["time"].iloc[0] - time_diff
+        last_row.at[0, "time"] = group["time"].iloc[-1] + time_diff
+
+        # Fill the groupby columns
+        first_row.at[0, "node_name"] = group.iloc[0]["node_name"]
+        first_row.at[0, "signal_instance"] = group.iloc[0]["signal_instance"]
+        first_row.at[0, "TRIP_ID"] = group.iloc[0]["TRIP_ID"]
+
+        last_row.at[0, "node_name"] = group.iloc[-1]["node_name"]
+        last_row.at[0, "signal_instance"] = group.iloc[-1]["signal_instance"]
+        last_row.at[0, "TRIP_ID"] = group.iloc[-1]["TRIP_ID"]
+
+        # Concatenate the new rows with the original group
+        return pd.concat([first_row, group, last_row])
+
+    # Apply the function to each group
+    data = data.groupby(["TRIP_ID"], group_keys=False).apply(add_na_rows)
+
+    # Reset the index and sort by time
+    data = data.reset_index(drop=True).sort_values(
+        by=["node_name", "signal_instance", "TRIP_ID", "time"]
+    )
+
+    return data
+
+
+def _get_data(
+    boat: str, date: str, _db_client: InfluxDBClient, feature: str
+) -> pd.DataFrame:
+    df = _db_client.query(boat, date, feature)
+    time.sleep(2)  # to not overload the db
+    return df
+
+
+@st.cache_resource
+def _get_db_client():
+    db_client = InfluxDBClient()
+    return db_client
+
+
+def _generate_trip_id(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.sort_values("time")
+    df["TRIP_ID"] = 1
+    current_trip_id = 1
+    previous_time = df["time"].iloc[0]
+
+    for index, row in df.iterrows():
+        current_time = row["time"]
+        if current_time - previous_time > timedelta(minutes=10):
+            current_trip_id += 1
+        df.at[index, "TRIP_ID"] = current_trip_id
+        previous_time = current_time
+
+    return df
+
+
+def _smooth_data(df: pd.DataFrame, smoothing_window: int) -> pd.DataFrame:
+    df["value"] = df["value"].rolling(window=smoothing_window).mean()
+    return df
+
+
+def _remove_outliers(df):
+    z_scores = zscore(df["value"])
+    df = df[z_scores < 3]
+    return df
+
+
+def _plot_figures(feature, traces):
+    fig = go.Figure(data=traces)
+    fig.update_layout(
+        title=f"{feature}",
+        yaxis=dict(fixedrange=True),
+        dragmode="zoom",
+        plot_bgcolor="rgba(225, 228, 233, 0.8)",
+        hovermode="x",
+    )
+    st.plotly_chart(fig, use_container_width=True)
+
+
+def _create_traces(df, feature, smoothing_window):
+    traces = []
+    for instance in df["signal_instance"].unique():
+        instance_df = df[df["signal_instance"] == instance]
+        instance_df = _add_na(instance_df)
+        instance_df = _smooth_data(instance_df, smoothing_window)
+        color = FEATURE_COLORS.get(feature, "black")
+
+        # If the signal_instance is 'P', use a lighter color
+        if instance == "P":
+            # Convert the color to RGB, lighten it, then convert back to hex
+            rgb = px.colors.hex_to_rgb(color)
+            lightened_rgb = [
+                min(255, int(c * 1.5)) for c in rgb
+            ]  # Increase brightness by 50%
+            color = "#{:02x}{:02x}{:02x}".format(*lightened_rgb)
+
+        traces.append(
+            go.Scatter(
+                x=instance_df["time"],
+                y=instance_df["value"],
+                mode="lines",
+                name=f"{instance}",
+                line=dict(width=2, color=color),
+            )
+        )
+
+    return traces

@@ -2,6 +2,7 @@
 # TODO: Write Readme
 # TODO: Set up database for errors and full_errors
 # TODO: Reimplement gps map with plotly library
+# TODO: CHange P-SB to influxDB
 
 import streamlit as st
 from streamlit_folium import folium_static
@@ -25,7 +26,8 @@ _, ERRORS, FULL_ERRORS = HelperFunctions.get_all_data()
 BOAT_NAMES = HelperFunctions.get_boats()   
 FEATURES = HelperFunctions.get_shown_features()
 FEATURE_COLORS = HelperFunctions.get_colors() 
-full_data_db = Database("full_data")
+
+
  
 ##########################  
 # Initial page config  
@@ -37,33 +39,25 @@ st.set_page_config(
     initial_sidebar_state="expanded", 
 ) 
  
-##########################
+########################## 
 # Body of anomalies  
 ##########################
 def anomly_body():
     tabs = st.tabs(BOAT_NAMES)
     for tab, boat in zip(tabs, BOAT_NAMES): 
-        with tab:
+        with tab: 
             HelperFunctions.write_heading("Anomaly Heatmap")
             AnomalyPlots.show_heat_map(boat, ERRORS, FEATURES)
             AnomalyPlots.show_mse_scatter(boat, FULL_ERRORS, FEATURES)
             
             st.divider()
-
+ 
             HelperFunctions.write_heading("Comparisons between Port and Starboard")
             date = AnomalySelectors.show_selections(ERRORS, boat)
-            if date: 
-                
-                data = full_data_db.get_data(boat, date)
-                
-                # TODO: Add back in and make visually pleasing and infromative. Suggestions to stack both sides on same fig
-                # AnomalyPlots.show_daily_data(
-                #     date, boat, data, FEATURES, FEATURE_COLORS
-                # )
             
-                AnomalyPlots.show_differences( 
-                    data, FEATURES, FEATURE_COLORS, date, boat
-                )
+            if date:  
+                smoothing_window = st.slider("Smoothing window", min_value=1, max_value=100, value=1, key=f"{boat} at {date}")
+                AnomalyPlots.plot_engine_features(boat, date, smoothing_window)
 
 ##########################
 # Main body of GPS disruptions
@@ -172,8 +166,10 @@ def main():
         if authenticate_api_key(api_key):
             st.session_state["authenticated"] = True
             st.rerun()
+        elif api_key == "":
+            st.stop()
         else:
-            st.error("Invalid API key. Access denied.")
+            st.error("Invalid password. Access denied.")
             st.stop()
     else:
         sidebar_body()
