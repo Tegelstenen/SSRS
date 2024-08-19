@@ -24,7 +24,6 @@ class HelperFunctions:
 
     @staticmethod
     def _get_full_path(cls) -> str:
-        #base_dir = cls.config.get("BASE_DIR")
         base_dir = os.getcwd()
         app_data_dir = cls.config.get("APP_DATA_DIR")
         full_path = os.path.join(base_dir, app_data_dir)
