@@ -8,13 +8,13 @@ import os
 
 from utils.config_manager import ConfigManager
 from utils.log_setup import setup_logging
-from utils.helper import HelperFunctions
+
+config = ConfigManager()
+setup_logging()
 
 class DataWidener:
     def __init__(self):
-        setup_logging()
-        self.config = ConfigManager()
-        self.directory = HelperFunctions.get_data_folder()
+        self.directory = config.get("TEMP_DATA_DIR")
         self.run(self.directory)
 
     def regex_fix(self, df: pd.DataFrame) -> pd.DataFrame:

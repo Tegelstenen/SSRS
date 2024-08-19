@@ -6,13 +6,13 @@ from pathlib import Path
 
 from utils.config_manager import ConfigManager
 from utils.log_setup import setup_logging
-from utils.helper import HelperFunctions
+
+config = ConfigManager()
 
 class DataImputer:
     def __init__(self):
         setup_logging()
-        self.config = ConfigManager()
-        self.directory = HelperFunctions.get_data_folder()
+        self.directory = config.get("TEMP_DATA_DIR")
         self.run(self.directory)
 
     def impute_geo_data(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -38,7 +38,7 @@ class DataImputer:
         """Impute missing values in event data."""
         logging.pipeline("Imputing event data")
         try:
-            EVENT_MEASUREMENTS = self.config.get("EVENT_MEASUREMENTS")
+            EVENT_MEASUREMENTS = config.get("EVENT_MEASUREMENTS")
             for event in EVENT_MEASUREMENTS:
                 if event in df.columns:
                     df[event] = df.get(event, 0)

@@ -7,13 +7,13 @@ from pathlib import Path
 
 from utils.config_manager import ConfigManager
 from utils.log_setup import setup_logging
-from utils.helper import HelperFunctions
+
+config = ConfigManager()
 
 class RawDataProcessor:
     def __init__(self):
         setup_logging()
-        self.config = ConfigManager()
-        self.directory = HelperFunctions.get_data_folder()
+        self.directory = config.get("TEMP_DATA_DIR")
         self.column_names: List[str] = self.config.get('COLUMN_NAMES')
         self.col_types: Dict[str, str] = self.config.get('COLUMN_TYPES')
         self.run()
