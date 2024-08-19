@@ -185,6 +185,32 @@ BLA BLA BLA
 
 </details>
 
+### GPS Disruptions
+
+The dashboard also visualises potetial GPS disruptions such as jamming och spoofing around the coast of Sweden. The logic behind this part of the dashborad is all being run from `main.py` and `GPSjam.py`
+
+This is a flowchart of the dashboard once you press the button GPS Disruptions.
+
+<div align="center">
+  <a href="https://github.com/Tegelstenen/SSRS">
+    <img src="images/GPSFlowchartApp.png" alt="GPS Flowchart">
+  </a>
+</div>
+
+A static display of a certain time period will occur when pressing update date or aggregate map. Update date will show a map for a specific selected hour and aggregate map will show an aggregated map over 24 hours. If the button now is pressed the website will update every hour and show the latest GPS disruptions. 
+
+<details><summary style="font-size: 14px; font-weight: bold;">Extended Description</summary>
+
+#### Main & Gpsjam
+These files control the logic behind the GPS Disruptions page on the dashboard. The flowchart above gives a good picture of the logic of this part of the program. Good to note however is that no other commands need to be used except for the buttons on the screen. 
+
+#### Model
+Model - The model is an Autoencoder trained on timeseries data just like the models for anomaly detection in engine behaviour. The model inputs here a sequences of 60 timesteps (roughly 60s) with values for LAT, LON, SOG, COG & RPM. It has later been finetuned with labelled data and converted to a binary classifier wich is the model used at this moment, `fine_tune_test.keras` is the model currently implemented in the script. The sripts/notebooks used to train this model are not available in this directory. 
+
+#### Pipeline
+Pipeline - The datapipeline used is simliar to the one described for engine anomaly detection, for GPS disruptions the relavant files can be found under `dashboard\modules\GpsDataPipeline`.Initial processing is done with `process_raw.py` in the GpsDataPipeline folder, final stage of processing is done with `manipulate.py`. After both files are run the data is in the same format as the model is trained on and stored under `dashboard\data\tmpfiles` as `geo_data.csv`. This file will be replaced each time now is pressed or an automatic update is triggered. 
+
+</details>
 
 <!-- CONTACT -->
 ## Contact
