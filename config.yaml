@@ -1,9 +1,7 @@
 # Directory structure
-BASE_DIR: "/Users/filipsjostrand/DevOps/GitHub/SSRS"
 TEMP_DATA_DIR: "pipeline/data"
 APP_DATA_DIR: "dashboard/data"
 GRAPHICS_DIR: "dashboard/graphics"
-
 
 # Data processing parameters
 CHUNK_SIZE: 1000000
@@ -37,7 +35,6 @@ PIPELINE_LOG_FORMAT: "%(elapsed_time)s -- %(message)s"
 MODEL_LOG_FORMAT: "%(elapsed_time)s - %(levelname)s - %(message)s"
 TRAIN_LOG_FORMAT: "%(elapsed_time)s - %(levelname)s - %(message)s"
 INFER_LOG_FORMAT: "%(elapsed_time)s - %(levelname)s - %(message)s"
-LOG_FILE: "pipeline.log"
 
 TO_QUERY:
   - "RPM"
@@ -56,9 +53,6 @@ BOATS:
   - "12-02, Amalia Wallenberg"
   - "12-11, Lovisa Åstrand"
   - "12-04, Lars Prytz"
-
-AVOID_IN_COMPARISON_PLOTS:
-  - "SOG"
 
 EVENT_MEASUREMENTS:
   - "E_CHECKENG"
@@ -108,19 +102,3 @@ GEO_FEATURES:
 
 # What scale to use for the anomaly heatmap
 HEAT_MAP_SCALE: [0, 0.5]
-
-# Tuning parameters
-PARAM_GRID:
-  timesteps: [10, 20]
-  learning_rate: [0.0001]
-  epochs: [10]
-  batch_size: [32, 64]
-
-TUNING_DATA_LENGTH: 5000 # How many observations to use when tuning
-TUNING_DATA_CONSISTENCY: 100 # How many consecutive values when tuning
-
-TUNED_PARAMETERS:
-  timesteps: 10
-  learning_rate: 0.0001
-  epochs: 10
-  batch_size: 32

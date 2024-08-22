@@ -6,14 +6,13 @@ import os
 
 from utils.config_manager import ConfigManager
 from utils.log_setup import setup_logging
-from utils.helper import HelperFunctions
 
 setup_logging()
 config = ConfigManager()
 
 class DataCleaner:
     def __init__(self):
-        self.data_path = os.path.join(HelperFunctions.get_data_folder(), "data.csv")
+        self.data_path = os.path.join(config.get("TEMP_DATA_DIR"), "data.csv")
         self.run()
         
     def run(self) -> None:

@@ -11,12 +11,12 @@ import logging
 
 from utils.config_manager import ConfigManager
 from utils.log_setup import setup_logging
-from utils.helper import HelperFunctions
 
+
+config = ConfigManager()
 
 class InfluxDBClient:
-    def __init__(self, config: ConfigManager):
-        self.config = config
+    def __init__(self):
         self.client = self._initialize_client()
 
     def _initialize_client(self) -> InfluxDBClient3:
@@ -29,10 +29,10 @@ class InfluxDBClient:
             cert = fh.read()
 
         return InfluxDBClient3(
-            host=self.config.get("INFLUXDB_HOST"),
+            host=config.get("INFLUXDB_HOST"),
             token=api_token,
-            org=self.config.get("INFLUXDB_ORG"),
-            database=self.config.get("INFLUXDB_DATABASE"),
+            org=config.get("INFLUXDB_ORG"),
+            database=config.get("INFLUXDB_DATABASE"),
             flight_client_options=flight_client_options(tls_root_certs=cert),
         )
 
@@ -49,7 +49,8 @@ class InfluxDBClient:
             logging.pipeline("Successfully connected to InfluxDB")
             if list_tables:
                 db_df = tables.to_pandas()
-                logging.info("Available tables:\n%s", db_df.to_string())
+                only_table_names = db_df.query("table_schema == 'iox'")['table_name']
+                return only_table_names
             return True
         except Exception as e:
             logging.error("Error connecting to InfluxDB: %s", e, exc_info=True)
@@ -60,11 +61,9 @@ class DataBaseQuery:
     def __init__(self, start: str, stop: str):
         self.start = start
         self.stop = stop
-        self.config = ConfigManager()
         setup_logging()
-        self.db_client = InfluxDBClient(self.config)
+        self.db_client = InfluxDBClient()
         self.iterator = 0
-        self.run()
 
     def run(self):
         logging.info(f"Starting data query for period: {self.start} to {self.stop}")
@@ -128,7 +127,7 @@ class DataBaseQuery:
     def generate_trip_id(self, df: pd.DataFrame) -> pd.DataFrame:
         df = df.sort_values("time")
         df["trip_id"] = 1
-        current_trip_id = 1
+        current_trip_id = hash(f"1 + {df['node_name'].iloc[0]}")
         previous_time = df["time"].iloc[0]
 
         for index, row in df.iterrows():
@@ -188,12 +187,12 @@ class DataBaseQuery:
             return None
 
     def get_arguments(self) -> tuple:
-        train_data_folder = HelperFunctions.get_data_folder()
+        train_data_folder = config.get("TEMP_DATA_DIR")
         os.makedirs(train_data_folder, exist_ok=True)
 
         query_start = pd.to_datetime(self.start).strftime("%Y-%m-%dT%H:%M:%SZ")
         query_stop = pd.to_datetime(self.stop).strftime("%Y-%m-%dT%H:%M:%SZ")
-        boats = self.config.get("BOATS")
+        boats = config.get("BOATS")
         return train_data_folder, query_start, query_stop, boats
 
     def all_start_stop_times(
@@ -243,7 +242,7 @@ class DataBaseQuery:
                     logging.error(f"Error during CSV writing: {e}")
 
     def query_sql(self, start_stop_times: pd.DataFrame, train_data_folder: str):
-        all_measurements = self.config.get("TO_QUERY")
+        all_measurements = config.get("TO_QUERY")
 
         # Group all trips for all boats together
         all_trips = start_stop_times.groupby("node_name")

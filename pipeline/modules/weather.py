@@ -10,12 +10,13 @@ import logging
 
 from utils.config_manager import ConfigManager
 from utils.log_setup import setup_logging
-from utils.helper import HelperFunctions
 
-class WeatherData:
+config = ConfigManager()
+
+class WeatherData:    
     def __init__(self):
-        self.config = ConfigManager()
-
+        pass
+    
     def fetch_weather_historic(self, lat: float, lon: float, start_date: str, end_date: str) -> pd.DataFrame:
         logging.pipeline("Fetching weather data")
         # Setup the Open-Meteo API client with retry on error
@@ -103,9 +104,8 @@ class WeatherData:
 
 class WeatherProcessor:
     def __init__(self):
-        self.config = ConfigManager()
         setup_logging()
-        self.directory = HelperFunctions.get_data_folder()
+        self.directory = config.get("TEMP_DATA_DIR")
         self.weather_data = WeatherData()
         self.run()
 

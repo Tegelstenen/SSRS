@@ -11,7 +11,6 @@ class SideBar:
     @staticmethod
     def images() -> None:
         grpahics_dir = config.get("GRAPHICS_DIR")
-        #base_dir = cls.config.get("BASE_DIR")
         base_dir = ''
         st.sidebar.markdown(
                 """<p align="center"><img src='data:image/png;base64,{}' class='img-fluid' style='width: 50%;'></p>""".format(
