@@ -14,8 +14,8 @@ class RawDataProcessor:
     def __init__(self):
         setup_logging()
         self.directory = config.get("TEMP_DATA_DIR")
-        self.column_names: List[str] = self.config.get('COLUMN_NAMES')
-        self.col_types: Dict[str, str] = self.config.get('COLUMN_TYPES')
+        self.column_names: List[str] = config.get('COLUMN_NAMES')
+        self.col_types: Dict[str, str] = config.get('COLUMN_TYPES')
         self.run()
 
     def run(self):

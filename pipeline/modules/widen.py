@@ -18,7 +18,7 @@ class DataWidener:
         self.run(self.directory)
 
     def regex_fix(self, df: pd.DataFrame) -> pd.DataFrame:
-        model_features = self.config.get("TO_QUERY", [])
+        model_features = config.get("TO_QUERY", [])
         cleaned_features = {re.sub(r'\d', '', feature.replace('_', '').lower()): feature for feature in model_features}
         
         def find_best_match(alias):
@@ -36,7 +36,7 @@ class DataWidener:
 
     def process_data(self, file_path: Path) -> pd.DataFrame:
         logging.pipeline(f"Processing data from {file_path}")
-        chunk_size = self.config.get('CHUNK_SIZE')
+        chunk_size = config.get('CHUNK_SIZE')
         chunks = []
         
         try:

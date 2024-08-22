@@ -18,14 +18,14 @@ class DataSequencer:
 
     def get_mean_values(self, df: pd.DataFrame) -> pd.DataFrame:
         """Calculate mean values at specified intervals for the already pivoted data."""
-        sequence_length = self.config.get("SEQUENCE_LENGTH", "5s")
+        sequence_length = config.get("SEQUENCE_LENGTH", "5s")
         df["date"] = pd.to_datetime(df["time"]).dt.date
         df["time"] = pd.to_datetime(df["time"]).dt.round(sequence_length).dt.strftime("%H:%M:%S")
         
         if "signal_instance" in df.columns:
             df["signal_instance"] = df["signal_instance"].fillna("unknown")
 
-        index = [col for col in self.config.get("INDEX", []) if col in df.columns]
+        index = [col for col in config.get("INDEX", []) if col in df.columns]
 
         numeric_columns = df.select_dtypes(include=[np.number]).columns.tolist()
         numeric_columns = [col for col in numeric_columns if col not in ['date', 'time']]

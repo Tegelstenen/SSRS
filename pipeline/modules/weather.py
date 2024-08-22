@@ -14,7 +14,7 @@ from utils.log_setup import setup_logging
 config = ConfigManager()
 
 class WeatherData:    
-    def __init__():
+    def __init__(self):
         pass
     
     def fetch_weather_historic(self, lat: float, lon: float, start_date: str, end_date: str) -> pd.DataFrame:

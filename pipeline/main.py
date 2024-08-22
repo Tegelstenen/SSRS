@@ -53,11 +53,10 @@ def run_steps(start: str, stop: str) -> None:
 
 def move_data(save_path: str) -> None:
     logging.info(f"Moving data to {save_path}")
-    move_path = os.path.join(config.get('BASE_DIR'), save_path)
     data_folder = config.get("TEMP_DATA_DIR")
     merged_file = os.path.join(data_folder, "data.csv")
-    destination_file = os.path.join(move_path, "data.csv")
-    os.makedirs(move_path, exist_ok=True)
+    destination_file = os.path.join(save_path, "data.csv")
+    os.makedirs(save_path, exist_ok=True)
     
     if not os.path.exists(merged_file):
         logging.error(f"Source file not found: {merged_file}")
@@ -70,7 +69,7 @@ def move_data(save_path: str) -> None:
         logging.error(f"Error moving file from {merged_file} to {destination_file}: {str(e)}")
         raise
 
-def remove_data_folder(e) -> None:
+def remove_data_folder() -> None:
     logging.info(f"Removing raw data folder")
     data_folder = config.get("TEMP_DATA_DIR")
     try:
