@@ -170,14 +170,14 @@ The LSTM autoencoder is the best performing and primary model in our code. Its c
 ```sh
 models/
 └── modules/
-│ ├── lstm
-│ │ ├── model.py
-│ │ ├── train.py
-│ │ └── infer.py
-│ └── autoencoder
-│ │ ├── ...
-│ │ ├── ...
-│ │ └── ...
+ ├── lstm
+ │ ├── model.py
+ │ ├── train.py
+ │ └── infer.py
+ └── autoencoder
+ │ ├── ...
+ │ ├── ...
+ │ └── ...
 ```
 
 The model is defined in the model.py file as follows:
