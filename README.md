@@ -30,9 +30,9 @@
 
 </div>
 
-For non profit organizations provide vital services to society as a whole. Their existance is often depended upon their memebrs volunteering and donations. These organization are driven by the passion of doing good and usually lack the continous development found in most companies. As a consequence, many of these organizations lack the resources to maintain and catch up with the latest technological advancements. AI for impact is a program funded by Google.org that aims to bridge this gap by helping non-profits implement AI solutions to their operational problems.
+For non profit organizations provide vital services to society as a whole. Their existence is often depended upon their members volunteering and donations. These organization are driven by the passion of doing good and usually lack the continuous development found in most companies. As a consequence, many of these organizations lack the resources to maintain and catch up with the latest technological advancements. AI for impact is a program funded by Google.org that aims to bridge this gap by helping non-profits implement AI solutions to their operational problems.
 
-This project is in partnership with the Swedish Sea Resuce Society (SSRS) and AI Sweden, driven by three university students. Given the time constraints, the project has focuse on analysing engine data for predicitive maintenance as well as analysis of geographical data to identify potential GPS jammings and spoofings.
+This project is in partnership with the Swedish Sea Rescue Society (SSRS) and AI Sweden, driven by three university students. Given the time constraints, the project has focused on analysing engine data for predictive maintenance as well as analysis of geographical data to identify potential GPS jammings and spoofings.
 
 
 ### Built With
@@ -93,10 +93,10 @@ python pipeline/main.py 2024-01-01 2024-01-02 models/data
 
 <details><summary style="font-size: 14px; font-weight: bold;">Extended Description</summary>
 
-Everythin is orchastrated under the `main.py` file. The steps taken are:
+Everythin is orchestrated under the `main.py` file. The steps taken are:
 
 1. Querying to the database using `db_query.py`
-    * First we find the seuence where RPM is greater or equal to 0 to find where the boats are actually moving.
+    * First we find the sequence where RPM is greater or equal to 0 to find where the boats are actually moving.
     * This is used to determining boat trips for each boat and then we make the queries on all of the data based of these trips
     * This saves a lot of different csv files for each boat, each trip, and each variable, like:
     ```
@@ -109,7 +109,7 @@ Everythin is orchastrated under the `main.py` file. The steps taken are:
         └── Trip2/
             ├── ...
     ```
-2. Then we make som initial processing inside `process_raw.py` of the individual csv files to create two merged csv files `engine_data.csv` `geo_data.csv`
+2. Then we make some initial processing inside `process_raw.py` of the individual csv files to create two merged csv files `engine_data.csv` `geo_data.csv`
     * `engine_data.csv` contains the data pertaining to the engine (i.e., they have a value to `signal_instance`)
         $\longrightarrow$ `RPM`
         $\longrightarrow$`ENGTEMP`
@@ -137,7 +137,7 @@ Everythin is orchastrated under the `main.py` file. The steps taken are:
     * We are assuming not much is happening within potential gaps in the 5 second windows created in the previous step.
 5. Then we create a merged dataframe with `merge.py`
 6. To make better use of the geographical data we add weather conditions using `weather.py`
-    * This script fetches from ... and does ...
+    * This script fetches weather data from the Open-Meteo API and maps the nearest weather reading to nearby boats
     * The result is `wind_velocity` and `alignment_factor` features added to the dataframe
 7. The final `final_cleanup.py` does minimal alteration to the data to fit what we have in the models.
 
@@ -165,7 +165,26 @@ There are two models: `lstm` and `autoencoder`. The `lstm` is an LSTM autoencode
 
 <details><summary style="font-size: 14px; font-weight: bold;">Extended Description</summary>
 
-BLA BLA BLA
+The LSTM autoencoder is the best performing and primary model in our code. Its code is structured as follows:
+
+```sh
+models/
+└── modules/
+│   ├── lstm
+    │   ├── model.py
+    │   ├── train.py
+    │   └── infer.py
+│   └── autoencoder
+    │   ├── ...
+    │   ├── ...
+    │   └── ...
+
+The model is defined in the model.py file as follows:
+
+![LSTM Model](SSRS/images/lstm_model.jpg)
+
+
+
 
 </details>
 
@@ -205,7 +224,7 @@ A static display of a certain time period will occur when pressing update date o
 These files control the logic behind the GPS Disruptions page on the dashboard. The flowchart above gives a good picture of the logic of this part of the program. Good to note however is that no other commands need to be used except for the buttons on the screen. 
 
 #### Model
-Model - The model is an Autoencoder trained on timeseries data just like the models for anomaly detection in engine behaviour. The model inputs here a sequences of 60 timesteps (roughly 60s) with values for LAT, LON, SOG, COG & RPM. It has later been finetuned with labelled data and converted to a binary classifier wich is the model used at this moment, `fine_tune_test.keras` is the model currently implemented in the script. The sripts/notebooks used to train this model are not available in this directory. 
+Model - The model is an Autoencoder trained on timeseries data just like the models for anomaly detection in engine behaviour. The model inputs here a sequences of 60 timesteps (roughly 60s) with values for LAT, LON, SOG, COG & RPM. It has later been finetuned with labelled data and converted to a binary classifier wich is the model used at this moment, `fine_tune_test.keras` is the model currently implemented in the script. The scripts/notebooks used to train this model are not available in this directory. 
 
 #### Pipeline
 Pipeline - The datapipeline used is simliar to the one described for engine anomaly detection, for GPS disruptions the relavant files can be found under `dashboard\modules\GpsDataPipeline`.Initial processing is done with `process_raw.py` in the GpsDataPipeline folder, final stage of processing is done with `manipulate.py`. After both files are run the data is in the same format as the model is trained on and stored under `dashboard\data\tmpfiles` as `geo_data.csv`. This file will be replaced each time now is pressed or an automatic update is triggered. 
