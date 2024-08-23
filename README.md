@@ -182,7 +182,11 @@ models/
 
 The model is defined in the model.py file as follows:
 
-![LSTM Model](SSRS/images/lstm_model.jpg)
+<div align="center">
+  <a href="https://github.com/Tegelstenen/SSRS">
+    <img src="images/lstm_model.jpg" alt="GPS Flowchart">
+  </a>
+</div>
 
 
 
