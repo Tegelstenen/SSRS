@@ -46,7 +46,7 @@ class GPSDataProcessor:
 
     def __init__(self, last_hour_csv_path):
         ###### FIX THIS WHEN DB IS LIVE
-        self.current_time = datetime.datetime.utcnow() - datetime.timedelta(days=25)
+        self.current_time = datetime.datetime.utcnow() #- datetime.timedelta(days=25)
         ###### 
         self.csv_path = last_hour_csv_path
         self.time_comparison_result = self.compare_times(self.csv_path)
@@ -160,11 +160,18 @@ class GPSDataProcessor:
         GPS_measurements = ["LAT", "LON", "SOG", "COG", "RPM", "CELL"]
         print({self.previous_hour})
         print({self.current_hour})
+        # to fix for database
+        if measurement == "LAT":
+            value_column = "value_latitude"
+        elif measurement == "LON":
+            value_column = "value_longitude"
+        else:
+            value_column = "value"
 
         for measurement in GPS_measurements:
             # SQL query
             sql = f"""
-                SELECT time, node_id, node_name, signal_name_alias, value
+                SELECT time, node_id, node_name, signal_name_alias, {value_column}
                 FROM "{measurement}"
                 WHERE time >= '{self.previous_hour}' AND time <= '{self.current_hour}'
                     AND value != 80.00861904
@@ -180,6 +187,13 @@ class GPSDataProcessor:
 
                 # Convert the result to a DataFrame
                 df = table.to_pandas()
+
+                # Rename columns to uppercase LAT and LON
+                if measurement == "LAT":
+                    df.rename(columns={"value_latitude": "LAT"}, inplace=True)
+                elif measurement == "LON":
+                    df.rename(columns={"value_longitude": "LON"}, inplace=True)
+
                 #### CHANGE 
                 self.current_working_directory = os.getcwd()
                 folder_name = os.path.join(self.current_working_directory, 'dashboard', 'data', 'tmpfiles')
