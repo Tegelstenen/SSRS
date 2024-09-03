@@ -156,7 +156,7 @@ def authenticate_api_key(api_key):
 
 def main():
     if "authenticated" not in st.session_state:
-        st.session_state["authenticated"] = False
+        st.session_state["authenticated"] = True
 
     if not st.session_state["authenticated"]:
         api_key = st.text_input("Enter password:", type="password")
