@@ -46,7 +46,7 @@ class GPSDataProcessor:
 
     def __init__(self, last_hour_csv_path):
         ###### FIX THIS WHEN DB IS LIVE
-        self.current_time = datetime.datetime.utcnow() #- datetime.timedelta(days=25)
+        self.current_time = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=1)
         ###### 
         self.csv_path = last_hour_csv_path
         self.time_comparison_result = self.compare_times(self.csv_path)
@@ -99,7 +99,7 @@ class GPSDataProcessor:
       
     def compare_times(self, csv_path):
         df = pd.read_csv(csv_path)
-        df['datetime'] = pd.to_datetime(df['date'] + ' ' + df['time'])
+        df['datetime'] = pd.to_datetime(df['date'] + ' ' + df['time'], utc=True)
         
         current_time_rounded_down = self.current_time.replace(minute=0, second=0, microsecond=0)
         previous_time_rounded_down = current_time_rounded_down - datetime.timedelta(hours=1)
@@ -161,21 +161,28 @@ class GPSDataProcessor:
         print({self.previous_hour})
         print({self.current_hour})
         # to fix for database
-        if measurement == "LAT":
-            value_column = "value_latitude"
-        elif measurement == "LON":
-            value_column = "value_longitude"
-        else:
-            value_column = "value"
 
         for measurement in GPS_measurements:
+            
+            if measurement == "LAT":
+                value_column = "value_latitude"
+                measurement_name = "LAT-LON"
+                print(value_column)
+            elif measurement == "LON":
+                value_column = "value_longitude"
+                measurement_name = "LAT-LON"
+                print(value_column)
+            else:
+                value_column = "value"
+                measurement_name = measurement
+            print(measurement)
             # SQL query
             sql = f"""
                 SELECT time, node_id, node_name, signal_name_alias, {value_column}
-                FROM "{measurement}"
+                FROM "{measurement_name}"
                 WHERE time >= '{self.previous_hour}' AND time <= '{self.current_hour}'
-                    AND value != 80.00861904
-                    AND value != 8191.875
+                    AND {value_column} != 80.00861904
+                    AND {value_column} != 8191.875
                 ORDER BY
                     time ASC
                 """
@@ -184,15 +191,19 @@ class GPSDataProcessor:
                 # Query the database
                 table = self.client.query(sql)
                 #print(table) # to debug
-
+                print("curr and prev hour")
+                print(self.previous_hour)
+                print(self.current_hour)
                 # Convert the result to a DataFrame
                 df = table.to_pandas()
 
                 # Rename columns to uppercase LAT and LON
                 if measurement == "LAT":
-                    df.rename(columns={"value_latitude": "LAT"}, inplace=True)
+                    df.rename(columns={"value_latitude": "value"}, inplace=True)
+                    df['signal_name_alias'] = 'A_LAT'
                 elif measurement == "LON":
-                    df.rename(columns={"value_longitude": "LON"}, inplace=True)
+                    df.rename(columns={"value_longitude": "value"}, inplace=True)
+                    df['signal_name_alias'] = 'A_LON'
 
                 #### CHANGE 
                 self.current_working_directory = os.getcwd()
@@ -230,9 +241,6 @@ class GPSCleanData:
         subprocess.run(process_raw_script, check=True, text=True, bufsize=1)
 
     def run_manipulate_script(self):
-        # manipulate_script = ["python", self.manipulate_path, self.train_data_dir]
-        # subprocess.run(manipulate_script, check=True, text=True, bufsize=1)
-
         manipulate_script = ["python", self.manipulate_path, self.train_data_dir]
         try:
             result = subprocess.run(manipulate_script, check=True, text=True, capture_output=True)
